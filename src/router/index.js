@@ -35,12 +35,13 @@ const router = createRouter({
       path: '/',
       name: 'Index',
       component: Index,
-      redirect: 'monitor_global',
+      // 打开网址默认进入"线路监控"
+      redirect: 'monitor_line',
       children: [
         {
-          path: '/',
-          name: 'MonitorGlobalRoot',
-          component: MonitorGlobal,
+          // 根路径统一跳到线路监控，保证地址栏与页面一致
+          path: '',
+          redirect: { name: 'MonitorLine' },
         },
         {
           path: 'monitor_global',

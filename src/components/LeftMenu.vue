@@ -24,8 +24,8 @@
           <el-icon><Odometer /></el-icon>
           <span>智慧监测</span>
         </template>
-        <el-menu-item index="monitor_global">全局监测</el-menu-item>
         <el-menu-item index="monitor_line">线路监控</el-menu-item>
+        <el-menu-item index="monitor_global">全局监测</el-menu-item>
         <el-menu-item index="pantograph_archive">受电弓档案</el-menu-item>
         <el-menu-item index="fault_overview">实时告警</el-menu-item>
       </el-sub-menu>
@@ -107,7 +107,6 @@ const MENU_ROUTE_NAME = {
 const ROUTE_TO_MENU = Object.fromEntries(
   Object.entries(MENU_ROUTE_NAME).map(([menu, name]) => [name, menu]),
 )
-ROUTE_TO_MENU.MonitorGlobalRoot = 'monitor_global'
 ROUTE_TO_MENU.LinePantograph = 'pantograph_archive'
 
 // 菜单 key → 所属分组（用于自动展开当前分组）
@@ -121,7 +120,7 @@ const MENU_GROUP = {
   monitor_car: 'g-system', box_alarm_monitor: 'g-system',
 }
 
-const activeKey = ref('monitor_global')
+const activeKey = ref('monitor_line')
 
 // 默认只展开当前页所在分组，避免 16 个二级项把侧栏撑满
 const openedGroups = computed(() => {
