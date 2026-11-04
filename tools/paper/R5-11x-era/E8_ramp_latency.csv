@@ -1,0 +1,7 @@
+﻿rate_C_per_min,threshold_only_s,confirm_only_s,hybrid_vote_s,advance_vs_threshold_s
+1,漏检,3,未检出,—
+2,1654,4,66,1588
+3,1101,5,45,1056
+5,662,2,45,617
+10,333,2,45,288
+20,167,2,46,121

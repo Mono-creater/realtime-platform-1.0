@@ -1,0 +1,11 @@
+item,value
+mainOnlyBytes,31
+mainPlusSubBytes,62
+dailyMainOnlyMB,1.277
+dailyMainPlusSubMB,2.554
+dailyFullWaveMB,98.88
+savingRatio,77.4
+savingRatioSub,38.7
+lossToleratedPackets,9
+maxStalenessS,18
+reconnectCapS,30

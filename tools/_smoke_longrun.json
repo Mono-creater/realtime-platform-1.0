@@ -1,0 +1,48 @@
+{
+  "host": "127.0.0.1",
+  "port": 1502,
+  "period": 1000,
+  "duration": 90,
+  "totalRecv": 88,
+  "totalDrop": 2,
+  "totalErr": 0,
+  "gaps": 2,
+  "expected": 84,
+  "wraps": 0,
+  "legacy": 0,
+  "estLoss": 0.023809523809523808,
+  "injectedLoss": 0.022222222222222223,
+  "phases": [
+    {
+      "loss": 0.01,
+      "recv": 30,
+      "drop": 0,
+      "err": 0,
+      "firstSeq": 388,
+      "lastSeq": 415,
+      "actual": 0,
+      "estLoss": -0.0714285714285714
+    },
+    {
+      "loss": 0.02,
+      "recv": 29,
+      "drop": 1,
+      "err": 0,
+      "firstSeq": 416,
+      "lastSeq": 443,
+      "actual": 0.03333333333333333,
+      "estLoss": -0.03571428571428581
+    },
+    {
+      "loss": 0.05,
+      "recv": 29,
+      "drop": 1,
+      "err": 0,
+      "firstSeq": 444,
+      "lastSeq": 471,
+      "actual": 0.03333333333333333,
+      "estLoss": -0.03571428571428581
+    }
+  ],
+  "finishedAt": "2026-10-17T14:10:38.956Z"
+}

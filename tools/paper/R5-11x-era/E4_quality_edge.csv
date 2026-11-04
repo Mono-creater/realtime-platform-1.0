@@ -1,0 +1,7 @@
+﻿age_ms,quality,expected,match
+2999,GOOD,GOOD,一致
+3000,GOOD,GOOD,一致
+3001,STALE,STALE,一致
+9999,STALE,STALE,一致
+10000,STALE,STALE,一致
+10001,BAD,BAD,一致

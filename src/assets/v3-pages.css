@@ -1,0 +1,163 @@
+/* 3.0 四域页面统一视觉：深色玻璃卡片 + 等宽数字 + 状态色
+   仅作用于带 v3- 前缀的类，避免影响旧页面。 */
+
+.v3-page {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 16px 18px 22px;
+  color: #e8edf3;
+  overflow-y: auto;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0, 198, 255, 0.05) 0%, transparent 62%);
+}
+
+.v3-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.v3-h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e0f0ff;
+  letter-spacing: 0.5px;
+}
+.v3-sub {
+  font-size: 12px;
+  color: #7a8b9f;
+}
+.v3-spacer { flex: 1; }
+
+.v3-card {
+  background: rgba(255, 255, 255, 0.032);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+.v3-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #cfe3f7;
+  margin-bottom: 12px;
+}
+.v3-card-title .hint {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: #7a8b9f;
+}
+
+.v3-grid { display: grid; gap: 14px; }
+.v3-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v3-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.v3-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.v3-row { display: flex; gap: 14px; }
+.v3-col { flex: 1; min-width: 0; }
+
+/* KPI */
+.v3-kpi {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.v3-kpi::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--kpi-color, #00c6ff);
+  opacity: 0.85;
+}
+.v3-kpi-label { font-size: 12px; color: #8fa6bd; letter-spacing: 0.5px; }
+.v3-kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--kpi-color, #e8edf3);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  margin-top: 4px;
+}
+.v3-kpi-value small { font-size: 14px; font-weight: 500; color: #8fa6bd; margin-left: 4px; }
+.v3-kpi-foot { font-size: 12px; color: #7a8b9f; margin-top: 2px; }
+
+/* 状态徽标 */
+.v3-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 9px;
+  border-radius: 10px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.v3-badge.ok { color: #00d68f; background: rgba(0, 214, 143, 0.12); border-color: rgba(0, 214, 143, 0.35); }
+.v3-badge.warn { color: #ffaa00; background: rgba(255, 170, 0, 0.12); border-color: rgba(255, 170, 0, 0.35); }
+.v3-badge.danger { color: #ff3d71; background: rgba(255, 61, 113, 0.12); border-color: rgba(255, 61, 113, 0.35); }
+.v3-badge.info { color: #00c6ff; background: rgba(0, 198, 255, 0.12); border-color: rgba(0, 198, 255, 0.35); }
+.v3-badge.mute { color: #8fa6bd; background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.12); }
+
+.v3-mono { font-variant-numeric: tabular-nums; }
+
+/* 进度条 */
+.v3-bar {
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.v3-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--bar-color, #00c6ff);
+  transition: width 0.35s ease;
+}
+
+/* 表格（Element Plus） */
+.v3-table .el-table {
+  background: transparent !important;
+  --el-table-border-color: rgba(255, 255, 255, 0.05);
+  --el-table-header-bg-color: rgba(10, 46, 93, 0.55);
+  --el-table-tr-bg-color: transparent;
+  --el-table-row-hover-bg-color: rgba(0, 198, 255, 0.07);
+  --el-table-text-color: #dbe6f2;
+  --el-table-header-text-color: #cfe3f7;
+}
+.v3-table .el-table th.el-table__cell {
+  background: rgba(10, 46, 93, 0.55) !important;
+  font-weight: 600;
+}
+.v3-table .el-table tr { background: transparent !important; }
+.v3-table .el-table td.el-table__cell { border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.v3-table .el-table__inner-wrapper::before { display: none; }
+
+/* 空态 */
+.v3-empty {
+  color: #7a8b9f;
+  font-size: 13px;
+  text-align: center;
+  padding: 36px 0;
+}
+
+/* 风险条（优先级） */
+.v3-level {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.v3-level.紧急 { color: #fff; background: #c9184a; }
+.v3-level.高 { color: #ff3d71; background: rgba(255, 61, 113, 0.16); }
+.v3-level.中 { color: #ffaa00; background: rgba(255, 170, 0, 0.14); }
+.v3-level.低 { color: #00d68f; background: rgba(0, 214, 143, 0.12); }

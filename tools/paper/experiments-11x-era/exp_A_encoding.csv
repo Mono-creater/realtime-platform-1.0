@@ -1,0 +1,9 @@
+item,value
+temp_maxAbsErr,0.05000000000001137
+temp_meanAbsErr,0.024986
+press_maxAbsErr,0.05000000000006821
+press_meanAbsErr,0.024999
+humid_maxAbsErr,0.05000000000001137
+humid_meanAbsErr,0.024988
+maxPress_x10_kPa,6553.5
+maxPress_x100_kPa,655.35

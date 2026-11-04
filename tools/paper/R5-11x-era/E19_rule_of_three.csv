@@ -1,0 +1,5 @@
+﻿zero_events,trials,rule_of_three_upper_pct
+0,300,1
+0,1000,0.3
+0,3000,0.1
+0,10000,0.03

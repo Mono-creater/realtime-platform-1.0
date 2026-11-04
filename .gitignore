@@ -1,0 +1,67 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+
+.eslintcache
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+
+# Vitest
+__screenshots__/
+
+# Vite
+*.timestamp-*-*.mjs
+
+# 本地环境变量（含密钥，勿提交）
+.env
+
+# ---------- 本工程追加 ----------
+
+# 运行时上传目录：保留目录本身，忽略用户上传内容
+uploads/*
+!uploads/.gitkeep
+
+# 旧版启动器：已被「启动平台1.0.bat」取代（菜单版合并），不再发布
+启动平台.bat
+
+# 早期拷贝残留的嵌套子工程，非本工程组成部分
+realtime-platform/
+
+# 测试报告（每次运行生成）
+tests/report.json
+
+# 运行态快照（工单/告警编号/告警上下文），启动时自动生成
+data/runtime-state.json
+data/runtime-state.json.tmp
+data/runtime-state-*.json
+data/runtime-state-*.tmp
+
+# 台架实测输出（CSV/JSON/导出）
+bench/out/*
+!bench/out/.gitkeep

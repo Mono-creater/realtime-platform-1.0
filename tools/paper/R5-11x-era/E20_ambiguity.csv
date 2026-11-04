@@ -1,0 +1,7 @@
+﻿lost_frames,observed_delta,indistinguishable_from_36bit_wrap
+1,1,否
+10,10,否
+1000,1000,否
+32767,32767,否
+32768,32768,否
+65535,65535,是（与回绕混淆）

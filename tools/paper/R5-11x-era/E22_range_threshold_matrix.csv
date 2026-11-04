@@ -1,0 +1,5 @@
+﻿range_C,warning_threshold,reachable,headroom_C,covers_TB150C
+0~80,80,不可达（阈值=量程上限，超量程被钳位）,0,否
+0~200,80,可达,120,是
+0~200,150,可达,50,是
+0~500,150,可达,350,是

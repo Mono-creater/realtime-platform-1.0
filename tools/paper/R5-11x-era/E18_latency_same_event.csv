@@ -1,0 +1,8 @@
+﻿rate_C_per_min,horizon_s,thr_only_median_s,thr_only_min_s,thr_only_miss,thr_only_source,confirm_only_median_s,confirm_only_min_s,confirm_only_miss,confirm_only_source,proposed_median_s,proposed_min_s,proposed_miss,proposed_source,advance_thr_vs_prop_s
+0.5,3600,,,20,未检出,3,2,10,roc,,,20,未检出,
+1,3600,3296,3282,0,threshold,3286,2,0,roc,3296,3281,0,threshold,0
+2,3600,1650,1641,0,threshold,9,2,0,roc,54,45,0,roc,1596
+3,3600,1101,1095,0,threshold,6,2,0,roc,46,45,0,roc,1055
+5,3600,663,660,0,threshold,5,2,0,roc,46,45,0,roc,617
+10,3600,332,330,0,threshold,3,2,0,roc,46,45,0,roc,286
+20,3600,167,166,0,threshold,2,2,0,roc,46,45,0,roc,121

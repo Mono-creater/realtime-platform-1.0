@@ -1,0 +1,6 @@
+﻿rate_C_per_min,threshold_only_s,confirm_only_s,vote_s,advance_s
+1,3300,漏检,漏检,—
+2,1650,74,45,1605
+3,1100,4,46,1054
+5,660,3,46,614
+10,330,3,46,284

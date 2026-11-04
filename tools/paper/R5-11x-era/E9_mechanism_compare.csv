@@ -1,0 +1,4 @@
+﻿mechanism,confirmN,vote,slope_mode,noise_alarms,spike_alarms,spike_from_roc,noise_per_h
+A_confirm,2,不启用,—,137,130,130,5.48
+B_slope,2,启用,纯窗级斜率,0,0,0,0
+C_hybrid,2,启用,短窗滑窗+占比投票,0,0,0,0

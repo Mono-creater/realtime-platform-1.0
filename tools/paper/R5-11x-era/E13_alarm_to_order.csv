@@ -1,0 +1,2 @@
+﻿alarm_level,alarm_msg,order_id,order_level,order_status
+major,temperature = 95.00 ℃ 越限（major）,WO00001,major,new

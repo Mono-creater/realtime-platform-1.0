@@ -1,0 +1,5 @@
+﻿poll_dt_ms,buffer_samples_fixed,equiv_window_before_s,equiv_window_after_s,sigma_ROC_before,sigma_ROC_after,sensitivity_ratio
+1000,64,64,60,0.8881,0.9473,0.94
+500,64,32,60,1.7762,0.9473,1.87
+200,64,12.8,60,4.4405,0.9473,4.69
+100,64,6.4,60,8.881,0.9473,9.37

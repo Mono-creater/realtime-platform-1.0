@@ -1,0 +1,6 @@
+﻿item,value
+样本数 n,500
+均值 mean / ms,1726
+p50 / ms,1509
+p95 / ms,3706
+max / ms,5733

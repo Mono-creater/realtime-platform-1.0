@@ -1,0 +1,8 @@
+﻿item,value
+枚举动作序列数（长度≤4）,781
+含非法迁移的序列数,775
+被拒绝的非法迁移条目数,2142
+走完主链路至 verified 的序列数,1
+可达状态集合,assigned / cancelled / completed / in_progress / new / verified
+允许的迁移数,5
+拒绝的迁移数,25

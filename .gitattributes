@@ -1,0 +1,22 @@
+# 默认：文本文件在仓库内统一存为 LF
+* text=auto eol=lf
+
+# Windows 批处理 / PowerShell 必须使用 CRLF：
+# 若以 LF 检出，cmd.exe 解析 goto 与多行 if 块会出错，
+# 导致「启动平台1.0.bat」等脚本在克隆后无法运行。
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# 二进制资源按原样处理，不做行尾转换
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.ttf  binary
+*.mp4  binary
+*.webm binary
+*.mov  binary
+*.pdf  binary

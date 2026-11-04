@@ -1,0 +1,54 @@
+正文段落数: 593 | clean 字符数: 20005
+重复 13-gram 数: 131
+合并后重复区段数（>=13字符）: 51
+
+=== 重复区段（按长度降序，Top 25）===
+[ 41字 x1] EN-Abs EN-Abs: dualpacketreportingprotocolthatcomprisesa
+[ 40字 x1] Body Body: dualpacketreportingprotocolrateofchangec
+[ 38字 x1] Body Body: newassignedinprogresscompletedverified
+[ 35字 x1] EN-Abs EN-Abs: maintenanceclosedloopthatcomprisesa
+[ 26字 x2] Body Body: 原始差分中值差分与时间窗投票三类差分类方法对3min
+[ 26字 x2] Body Body: 原始差分中值差分与时间窗投票三类差分类方法对3min
+[ 22字 x2] Table Body|Table: newassignedinprogressc
+[ 21字 x2] Body Body|EN-Abs: maintenanceclosedloop
+[ 20字 x2] Body Body: 回绕感知的序号连续性判据与三态数据质量码
+[ 20字 x2] Body Body: 回绕感知的序号连续性判据与三态数据质量码
+[ 19字 x2] Table Body|Table: inprogresscompleted
+[ 19字 x2] EN-Abs Body|EN-Abs: remainingusefullife
+[ 19字 x2] Body Body: 本文仿真条件下对单点尖峰全部误报100
+[ 19字 x2] Body Body: 本文仿真条件下对单点尖峰全部误报100
+[ 19字 x2] Body Body|EN-Abs: remainingusefullife
+[ 18字 x3] Table Body|Table: assignedinprogress
+[ 18字 x2] Body Body: 工程化CUSUM输入滤波门控的同条件
+[ 18字 x2] Body Body: 工程化CUSUM输入滤波门控的同条件
+[ 18字 x2] Body Body: 工单状态机退化趋势与剩余寿命预测运维
+[ 18字 x2] Body Body: 工单状态机退化趋势与剩余寿命预测运维
+[ 17字 x2] Table Body|Table: completedverified
+[ 17字 x2] Body Body: 取值对结论的影响见42节敏感性分析
+[ 17字 x2] Body Body: 取值对结论的影响见42节敏感性分析
+[ 16字 x2] Body Body: 变化率统计量统一到EWMA序列上
+[ 16字 x2] Body Body: 变化率统计量统一到EWMA序列上
+
+=== 按涉及段落类别汇总 ===
+Body: 31 段, 共 559 字符
+Body|Table: 6 段, 共 106 字符
+EN-Abs: 4 段, 共 102 字符
+Body|EN-Abs: 5 段, 共 86 字符
+Table: 5 段, 共 70 字符
+
+重复区段总覆盖（去重）: 923 | 占 clean 流 4.6%
+总重复字符（各区段累加）: 923
+
+=== 关键区段的段落定位 ===
+[41字 x1] 段[6] → dualpacketreportingprotocolthatcomprisesa
+[40字 x1] 段[7] → dualpacketreportingprotocolrateofchangec
+[38字 x1] 段[102] → newassignedinprogresscompletedverified
+[35字 x1] 段[6] → maintenanceclosedloopthatcomprisesa
+[26字 x2] 段[89, 113] → 原始差分中值差分与时间窗投票三类差分类方法对3min
+[26字 x2] 段[89, 113] → 原始差分中值差分与时间窗投票三类差分类方法对3min
+[22字 x2] 段[102, 265] → newassignedinprogressc
+[21字 x2] 段[6, 7] → maintenanceclosedloop
+[20字 x2] 段[14, 114] → 回绕感知的序号连续性判据与三态数据质量码
+[20字 x2] 段[14, 114] → 回绕感知的序号连续性判据与三态数据质量码
+[19字 x2] 段[102, 257] → inprogresscompleted
+[19字 x2] 段[6, 68] → remainingusefullife

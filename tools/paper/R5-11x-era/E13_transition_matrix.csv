@@ -1,0 +1,31 @@
+﻿from,action,result,to,error
+new,assign,允许,assigned,
+new,start,拒绝,—,状态不允许：new 不能执行 start
+new,complete,拒绝,—,状态不允许：new 不能执行 complete
+new,verify,拒绝,—,状态不允许：new 不能执行 verify
+new,cancel,允许,cancelled,
+assigned,assign,拒绝,—,状态不允许：assigned 不能执行 assign
+assigned,start,允许,in_progress,
+assigned,complete,拒绝,—,状态不允许：assigned 不能执行 complete
+assigned,verify,拒绝,—,状态不允许：assigned 不能执行 verify
+assigned,cancel,拒绝,—,状态不允许：assigned 不能执行 cancel
+in_progress,assign,拒绝,—,状态不允许：in_progress 不能执行 assign
+in_progress,start,拒绝,—,状态不允许：in_progress 不能执行 start
+in_progress,complete,允许,completed,
+in_progress,verify,拒绝,—,状态不允许：in_progress 不能执行 verify
+in_progress,cancel,拒绝,—,状态不允许：in_progress 不能执行 cancel
+completed,assign,拒绝,—,状态不允许：completed 不能执行 assign
+completed,start,拒绝,—,状态不允许：completed 不能执行 start
+completed,complete,拒绝,—,状态不允许：completed 不能执行 complete
+completed,verify,允许,verified,
+completed,cancel,拒绝,—,状态不允许：completed 不能执行 cancel
+verified,assign,拒绝,—,状态不允许：verified 不能执行 assign
+verified,start,拒绝,—,状态不允许：verified 不能执行 start
+verified,complete,拒绝,—,状态不允许：verified 不能执行 complete
+verified,verify,拒绝,—,状态不允许：verified 不能执行 verify
+verified,cancel,拒绝,—,状态不允许：verified 不能执行 cancel
+cancelled,assign,拒绝,—,状态不允许：cancelled 不能执行 assign
+cancelled,start,拒绝,—,状态不允许：cancelled 不能执行 start
+cancelled,complete,拒绝,—,状态不允许：cancelled 不能执行 complete
+cancelled,verify,拒绝,—,状态不允许：cancelled 不能执行 verify
+cancelled,cancel,拒绝,—,状态不允许：cancelled 不能执行 cancel

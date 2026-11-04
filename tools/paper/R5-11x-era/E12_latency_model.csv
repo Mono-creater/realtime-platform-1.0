@@ -1,0 +1,4 @@
+﻿poll_ms,t_window_max_s,t_poll_mean_s,t_total_mean_pred_s,t_total_max_s
+1000,1,0.5,1.5,2
+2000,1,1,2,3
+5000,1,2.5,3.5,6

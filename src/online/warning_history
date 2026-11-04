@@ -1,0 +1,21 @@
+CREATE TABLE warning_history (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL,          -- 碳滑板编号
+    content VARCHAR(50) NOT NULL,       -- 预警内容（压力超限等）
+    time TIMESTAMP NOT NULL,            -- 预警发生时间
+    worker VARCHAR(20),                -- 维修人工号
+    remark TEXT,
+    created_at TIMESTAMP DEFAULT NOW() -- 记录入库时间
+);
+CREATE TABLE over_limit_snapshot (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(50) NOT NULL,
+    count INT NOT NULL,
+    snapshot_time TIMESTAMP NOT NULL   -- 快照时间
+);
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'viewer'
+);

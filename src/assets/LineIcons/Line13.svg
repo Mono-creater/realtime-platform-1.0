@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90" viewBox="0 0 120 90">
+  <rect x="0" y="9" width="118" height="65" rx="10" fill="#D38407" />
+  <text x="-2" y="65" font-size="65" text-anchor="start" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold">1</text>
+  <text x="25" y="65" font-size="65" text-anchor="start" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold">3</text>
+  <text x="60" y="43" font-size="25" text-anchor="start" fill="#ffffff" font-family="Arial, sans-serif">号线</text>
+  <text x="60" y="65" font-size="17" text-anchor="start" fill="rgba(255,255,255,0.85)" font-family="Arial, sans-serif">Line 13</text>
+</svg>

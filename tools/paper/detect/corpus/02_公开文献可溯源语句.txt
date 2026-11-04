@@ -1,0 +1,49 @@
+# 比对库-2：公开可溯源语句库
+# 说明：这些语句来自论文参考文献中真实存在的公开文献、国家标准与经典文献，
+#       属于论文写作中可能被"原文照搬"而构成重复的高风险语句。
+# 每条前置来源标注，且均标注到"可唯一定位"的精度（卷/期/页 或 标准号），便于人工核验。
+# 核验时间：2026-10-08
+
+[来源:中国城市轨道交通协会. 中国城市轨道交通智慧城轨发展纲要[R]. 北京: 中国城市轨道交通协会, 2020（中城轨〔2020〕10号，2020-03-12 颁布）]
+建立覆盖车辆等专业的全生命周期智能运维体系。
+推动城轨由计划修向状态修转变。
+
+[来源:TB/T 3271—2011 轨道交通 受流系统 受电弓与接触网相互作用准则（已废止，由 GB/T 43790—2024 实质替代）]
+受电弓与接触网的相互作用应满足受流性能要求。
+弓网接触力应保持在规定的范围内。
+
+[来源:Modbus Organization. MODBUS application protocol specification V1.1b3[S]. Hopkinton: Modbus Organization, 2012-04-26]
+Modbus应用协议规定了功能码FC03用于读取保持寄存器。
+Modbus应用协议不包含应用层序号与完整性校验机制。
+功能码FC16用于向从站写入多个保持寄存器。
+
+[来源:PAGE E S. Continuous inspection schemes[J]. Biometrika, 1954, 41(1/2): 100-115. DOI:10.2307/2333009]
+累积和控制图通过对观测值与目标值偏差的累积来检测过程均值的微小偏移。
+当累积和超过决策边界时判定过程失控。
+
+[来源:ROBERTS S W. Control chart tests based on geometric moving averages[J]. Technometrics, 1959, 1(3): 239-250. DOI:10.1080/00401706.1959.10489860]
+指数加权移动平均控制图对各观测值赋予指数递减的权重。
+指数加权移动平均的稳态方差为sigma方乘以lambda除以二减lambda。
+
+[来源:SHEWHART W A. Economic control of quality of manufactured product[M]. New York: D. Van Nostrand Company, 1931（xiv+501 pp.）]
+休哈特控制图以三倍标准差作为控制限来判定过程是否处于受控状态。
+当观测点超出控制限时判定过程出现异常。
+
+[来源:WILSON E B. Probable inference, the law of succession, and statistical inference[J]. Journal of the American Statistical Association, 1927, 22(158): 209-212. DOI:10.1080/01621459.1927.10502953]
+威尔逊区间是一种用于二项分布比例估计的置信区间方法。
+威尔逊区间在小样本条件下比正态近似区间具有更好的覆盖率。
+
+[来源:SI X S, WANG W, HU C H, et al. Remaining useful life estimation—A review on the statistical data driven approaches[J]. European Journal of Operational Research, 2011, 213(1): 1-14. DOI:10.1016/j.ejor.2010.11.018]
+剩余寿命预测方法可分为基于物理模型、基于数据驱动和基于混合模型三类。
+基于数据驱动的方法通过历史退化数据建立退化模型并外推预测剩余寿命。
+
+[来源:ÅSTRÖM K J, BERNHARDSSON B. Comparison of Riemann and Lebesgue sampling for first order stochastic systems[C]//Proceedings of the 41st IEEE Conference on Decision and Control. Las Vegas: IEEE, 2002, 2: 2011-2016. DOI:10.1109/CDC.2002.1184824]
+事件触发采样以状态变化为触发条件而非固定时间间隔。
+事件触发采样能够在保证控制性能的同时减少通信次数。
+
+[来源:GB/T 30976.1—2014 工业控制系统信息安全 第1部分：评估规范]
+工业控制系统应满足数据完整性与操作可审计的安全要求。
+对关键寄存器的写入应实施最小权限控制。
+
+[来源:通用统计学教材表述（非特定文献原文，属公开基础知识）]
+置信区间用于量化点估计的不确定度。

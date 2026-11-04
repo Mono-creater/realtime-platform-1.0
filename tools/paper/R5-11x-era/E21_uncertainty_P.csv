@@ -1,0 +1,5 @@
+﻿channel,quantity,source,halfwidth,unit,distribution,u_b,weight_c2
+压力/kPa,变送器 MPE（0.5% FS）,精度等级 0.5% FS,5,kPa,均匀,2.88675,1
+压力/kPa,AD 增益（全温区 ±0.8% FS）,GL10-4AD 手册,8,kPa,均匀,4.6188,1
+压力/kPa,AD 非线性（±1.5 LSB）,16 位 ADC,0.02288818359375,kPa,均匀,0.01321,1
+压力/kPa,定点重编码 ½LSB,量化不确定度半宽,0.05,kPa,均匀,0.02887,1

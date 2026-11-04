@@ -1,0 +1,27 @@
+{
+  "host": "127.0.0.1",
+  "port": 1502,
+  "period": 1000,
+  "duration": 10,
+  "totalRecv": 10,
+  "totalDrop": 0,
+  "totalErr": 0,
+  "gaps": 0,
+  "expected": 9,
+  "estLoss": 0,
+  "injectedLoss": 0,
+  "wraps": 0,
+  "legacy": 0,
+  "phases": [
+    {
+      "loss": 0.01,
+      "recv": 10,
+      "drop": 0,
+      "err": 0,
+      "firstSeq": 8,
+      "lastSeq": 16,
+      "estLoss": null
+    }
+  ],
+  "finishedAt": "2026-10-17T13:47:09.264Z"
+}

@@ -1,0 +1,4 @@
+﻿baseline,name,kbps,note,compress_x
+B32,32 bit 浮点全量波形,4608,A/D 原始字长逐样本回传,18.97
+B16,16 bit 寄存器全量波形,2304,与 Modbus 字长一致,9.49
+B16c,16 bit 逐样本 + 序号,4608,朴素方案，仍逐样本,18.97

@@ -1,0 +1,9 @@
+<svg viewBox="0 0 47 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="47" height="20" fill="none" customFrame="#000000">
+	<defs>
+		<image id="image_0" width="47" height="20" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC8AAAAUCAYAAAAdmmTCAAAABHNCSVQICAgIfAhkiAAAAypJREFUSIntlb9vI0UUxz9vZtexYwdCQoJDEqy7JtJVSECBKFM5QIkQxykFdSrEH5A/gP/hmiMIXX1QUUNLc6ICJb5ICcE58I/s2rszj2JtxxufY6CB0+U7zczs+775vrfvzcANbvBiQf6OUXhUfWd8nWyeTLdlnluNd/FKF8AIZYBfN38g4eLZnEY1L0rp9msnj2fpmil+7uONuvvS7QOw3gQglf6Yg7yLQOcAuNV47zeAo40f15w4l/F6IztFxziFbHK8PPR5aL4w93vfPPlulr6pqO6u1IPG2iNRo6KizBhDm7c7H+rW4bZuHW7rW+0PlMH+LB+ioqJGg8brGjTWHlV3V+rX6TP/OrL/AaaWjW1U6x63p0GyU/x8AVQx1nDx4IhAC9i7r9HzhpJNiQ6OEYSle6tEPiD5qkkqPebjJdKwx+Jn87STkJJJaT44pXR3ncgFzBmPOzgllT7z997AOw8ixAcNOFlE0vBb3Tx7f5rGZ2e+sVL3uD1gJ1yN8arE3hIl2edU+iSaxR07S9GVud1/k1ZaIPaWRGJAiIp/0LMdTuMSsbe00gJFVyZ2FoBEZdQ/UQKxt3hVqrsrhKsxwA6N6aUTTOyorQu/7ym6Iwj2k3V63k78qOFMEXr2gl/sTxg2sCiKwKAhBcGKRwCPkNoLlFeveLtcJd7S7Bexn86Rfn2MwJ6qBXETzZvnK3eAfeAjwaD4wW0iFNMKJRbo2HMKFLE+xKhFMASEGLEI4Eg5s0cYzfLiJWU93aIvEZYAp46UBMXjxeFMQp+Yilsiok0cdEbnjt1ID4F9hNz1+Vw37NWyKQO1LGoPZPdxxb2CN46uPEXxxHRRozhJRsSMkzHEWV76s4aThPbCMU+Cn0dWXGYTqyEyGF37FKshZbdI30T0JRrzq7WBtmvFjwSPEenY85lZGH90pFVGVb8PNMC0y9vu5RYYzQkHcsGPYsstc6Uzgaviu5DV1ZB41YHVcHTo+DyXVeGwbc7uA6hwblsLNbfYyh003c/lqz127uOBtutiZdi0E7/oH+G80mW5kzVXs3IHNWWWWzNI16J7tVnhOW/YG/xX+AsO3IZbOAOZjwAAAABJRU5ErkJggg==" />
+		<pattern id="pattern_0" width="1" height="1" image-fill-type="fill" patternContentUnits="objectBoundingBox">
+			<use transform="matrix(0.0212766,0,0,0.05,0,0)" xlink:href="#image_0" />
+		</pattern>
+	</defs>
+	<rect id="car 1" width="47" height="20" x="0" y="0" fill="url(#pattern_0)" />
+</svg>

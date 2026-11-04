@@ -1,0 +1,4 @@
+﻿signal,unit,range,points,max_abs_err,mean_abs_err,half_lsb,verdict
+温度 temperature,℃,-10 ~ 80,1801,0.05,0.024986,0.05,满足
+压力 pressure,kPa,0 ~ 1000,20001,0.05,0.024999,0.05,满足
+湿度 humidity,%RH,0 ~ 100,2001,0.05,0.024988,0.05,满足

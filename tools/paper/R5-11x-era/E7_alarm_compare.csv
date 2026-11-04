@@ -1,0 +1,4 @@
+﻿group,noise_alarms,noise_rate_per_h,spike_alarms,spike_from_roc,spike_from_threshold,ramp_latency_median_s,trials_per_cell,duration_s,spike_reduction_pct
+A_confirm,138,5.52,131,131,0,3,300,300,0
+B_slope,0,0,0,0,0,45,300,300,100
+C_hybrid,0,0,0,0,0,45,300,300,100

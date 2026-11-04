@@ -1,0 +1,9 @@
+[build]
+builder = "nodejs"
+buildCommand = "npm install"
+
+[nodejs]
+version = "22"
+
+[deploy]
+startCommand = "node server.js"

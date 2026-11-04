@@ -1,0 +1,7 @@
+/* 全局字体声明（原在 topHeader / LogoComponent / Line_Pantograph2 中重复声明，合并至此） */
+@font-face {
+  font-family: 'FZYTJW';
+  src: url('./fonts/FZYTJW.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

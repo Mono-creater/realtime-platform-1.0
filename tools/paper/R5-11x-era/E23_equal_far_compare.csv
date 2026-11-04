@@ -1,0 +1,5 @@
+﻿method,working_point,far_pct,note,pd_1,med_1_s,pd_3,med_3_s,pd_10,med_10_s
+cusum,h=500,17.5,网格内最低 FAR 工作点,1,770,1,765,1,764
+ewma,L=9,1.5,FAR ≤ 5% 内最接近 2%,0.06666666666666667,1182,0,,0,
+ph,eps=500,37,网格内最低 FAR 工作点,1,770,1,765,1,764
+proposed,Tvote/rho=60s/0.5,30.5,网格内最低 FAR 工作点,1,255,1,61,1,60

@@ -1,0 +1,5 @@
+﻿channel,quantity,source,halfwidth,unit,distribution,u_b,weight_c2
+湿度/%RH,变送器 MPE（0.5% FS）,精度等级 0.5% FS,0.5,%RH,均匀,0.28868,1
+湿度/%RH,AD 增益（全温区 ±0.8% FS）,GL10-4AD 手册,0.8,%RH,均匀,0.46188,1
+湿度/%RH,AD 非线性（±1.5 LSB）,16 位 ADC,0.002288818359375,%RH,均匀,0.00132,1
+湿度/%RH,定点重编码 ½LSB,量化不确定度半宽,0.05,%RH,均匀,0.02887,1

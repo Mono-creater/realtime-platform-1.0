@@ -1,0 +1,3 @@
+﻿poll_ms,t_sliding_window_ms,t_sliding_note,t_median_group_delay_ms,t_median_note,t_poll_phase_mean_ms,t_poll_note,t_poll_phase_max_ms,t_confirm_ms,t_confirm_note,t_total_median_pred_ms,t_total_max_ms
+1000,1000,PLC 10 点均值最坏整窗刷新,1000,3 点中值群时延 = 1 个采样周期,500,轮询相位均匀分布的均值,1000,1000,连续确认 2 点 = 1 个轮询周期,3500,4000
+2000,1000,PLC 10 点均值最坏整窗刷新,2000,3 点中值群时延 = 1 个采样周期,1000,轮询相位均匀分布的均值,2000,2000,连续确认 2 点 = 1 个轮询周期,6000,7000

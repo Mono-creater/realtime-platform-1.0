@@ -1,0 +1,5 @@
+﻿kpi,formula,input,value,unit
+可用率 A,1 − t_down/t_total,"t_total=720 h, t_down=8 h",0.9889,—
+数据完整率 C,N_good/N_exp,"N_good=998, N_exp=1000",0.998,—
+丢包率 L,N_gap/N_exp,"N_gap=3, N_exp=43200",0.000069,—
+平均修复时间 MTTR,Σ(t_c − t_r)/n,n=60 张工单,29,min

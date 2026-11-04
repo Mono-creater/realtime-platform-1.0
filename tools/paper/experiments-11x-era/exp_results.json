@@ -1,0 +1,729 @@
+{
+ "A": {
+  "temperature": {
+   "n": 1801,
+   "maxAbsErr": 0.05000000000001137,
+   "meanAbsErr": 0.024986118822876185,
+   "maxAt": 64.35
+  },
+  "pressure": {
+   "n": 20001,
+   "maxAbsErr": 0.05000000000006821,
+   "meanAbsErr": 0.024998750062496876,
+   "maxAt": 512.05
+  },
+  "humidity": {
+   "n": 2001,
+   "maxAbsErr": 0.05000000000001137,
+   "meanAbsErr": 0.02498750624687656,
+   "maxAt": 64.35
+  },
+  "boundary": {
+   "tempMinus10": {
+    "raw": 65436,
+    "dec": -10
+   },
+   "tempPlus80": {
+    "raw": 800,
+    "dec": 80
+   },
+   "press1000": {
+    "raw": 10000,
+    "dec": 1000
+   },
+   "pressClamp": {
+    "raw": 65535,
+    "dec": 6553.5
+   },
+   "max10": 6553.5,
+   "max100": 655.35
+  }
+ },
+ "B": {
+  "gridSize": 189,
+  "noise0_dt05": {
+   "T": {
+    "n": 29,
+    "mean": -11.97,
+    "sd": 13.05,
+    "maxAbs": 30.69,
+    "within10": 51.7
+   },
+   "K": {
+    "n": 29,
+    "mean": 0,
+    "sd": 0,
+    "maxAbs": 0,
+    "within10": 100
+   },
+   "dLmean": 0.241,
+   "dLmax": 0.5,
+   "ok": 0.8285714285714286,
+   "app": 0.4857142857142857,
+   "tpT": {
+    "n": 31,
+    "mean": 1.64,
+    "sd": 11.79,
+    "maxAbs": 21.64,
+    "within10": 61.3
+   },
+   "tpDL": 0.25
+  },
+  "noise1_dt05": {
+   "T": {
+    "n": 30,
+    "mean": -9.43,
+    "sd": 14.11,
+    "maxAbs": 30.69,
+    "within10": 60
+   },
+   "K": {
+    "n": 30,
+    "mean": -0.06,
+    "sd": 1.09,
+    "maxAbs": 2.44,
+    "within10": 100
+   },
+   "dLmean": 0.184,
+   "dLmax": 0.5,
+   "ok": 0.8571428571428571,
+   "app": 0.5714285714285714,
+   "tpT": {
+    "n": 30,
+    "mean": 2.39,
+    "sd": 11.95,
+    "maxAbs": 21.64,
+    "within10": 56.7
+   },
+   "tpDL": 0.214
+  },
+  "noise3_dt05": {
+   "T": {
+    "n": 30,
+    "mean": -4.12,
+    "sd": 19.04,
+    "maxAbs": 30.69,
+    "within10": 43.3
+   },
+   "K": {
+    "n": 30,
+    "mean": 1.16,
+    "sd": 2.75,
+    "maxAbs": 8.05,
+    "within10": 100
+   },
+   "dLmean": 0.102,
+   "dLmax": 0.596,
+   "ok": 0.8571428571428571,
+   "app": 0.5714285714285714,
+   "tpT": {
+    "n": 29,
+    "mean": 8.75,
+    "sd": 12.46,
+    "maxAbs": 29.46,
+    "within10": 44.8
+   },
+   "tpDL": 0.1
+  },
+  "noise0_dt10": {
+   "T": {
+    "n": 16,
+    "mean": -21.7,
+    "sd": 9.88,
+    "maxAbs": 30.69,
+    "within10": 12.5
+   },
+   "K": {
+    "n": 16,
+    "mean": 0,
+    "sd": 0,
+    "maxAbs": 0,
+    "within10": 100
+   },
+   "dLmean": 0.875,
+   "dLmax": 1,
+   "ok": 0.5714285714285714,
+   "app": 0.25,
+   "tpT": {
+    "n": 16,
+    "mean": 4.62,
+    "sd": 6.64,
+    "maxAbs": 21.64,
+    "within10": 87.5
+   },
+   "tpDL": 0.25
+  }
+ },
+ "C": {
+  "接触力环（标称 τ=2.0 s, L=0.6 s）": {
+   "truth": {
+    "tauEff": 1.738,
+    "lEff": 0.5,
+    "K": 1,
+    "step": 30
+   },
+   "rows": [
+    {
+     "name": "出厂保守参数",
+     "kp": 1.5,
+     "ki": 0.5,
+     "kd": 0.5,
+     "v1_over": 0,
+     "v1_settle": 7.5,
+     "v1_sse": 0,
+     "v1_iae": 45,
+     "v2_over": 0,
+     "v2_settle": 7.5,
+     "v2_sse": 0,
+     "v2_iae": 45,
+     "v2_rise": 3,
+     "uMin": 92.1,
+     "uMax": 122.5
+    },
+    {
+     "name": "Z-N 直接整定（真值）",
+     "kp": 4.171,
+     "ki": 4.171,
+     "kd": 1.043,
+     "v1_over": 134.63,
+     "v1_settle": 800,
+     "v1_sse": -4.833,
+     "v1_iae": 7040.5,
+     "v2_over": 134.63,
+     "v2_settle": 800,
+     "v2_sse": -3.038,
+     "v2_iae": 7900.8,
+     "v2_rise": 0,
+     "uMin": 50,
+     "uMax": 257.7
+    },
+    {
+     "name": "Z-N 直接整定（辨识值）",
+     "kp": 4.048,
+     "ki": 3.855,
+     "kd": 1.063,
+     "v1_over": 125.29,
+     "v1_settle": 800,
+     "v1_sse": -4.498,
+     "v1_iae": 6969,
+     "v2_over": 125.29,
+     "v2_settle": 800,
+     "v2_sse": -5.083,
+     "v2_iae": 7750.2,
+     "v2_rise": 0,
+     "uMin": 50,
+     "uMax": 249.3
+    },
+    {
+     "name": "安全折减 ZN（真值）",
+     "kp": 3.239,
+     "ki": 3.239,
+     "kd": 0.81,
+     "v1_over": 100.25,
+     "v1_settle": 16,
+     "v1_sse": 0,
+     "v1_iae": 90.2,
+     "v2_over": 103.9,
+     "v2_settle": 18,
+     "v2_sse": 0,
+     "v2_iae": 99,
+     "v2_rise": 0.5,
+     "uMin": 50,
+     "uMax": 215.8
+    },
+    {
+     "name": "安全折减 ZN（辨识值）",
+     "kp": 3.123,
+     "ki": 2.974,
+     "kd": 0.82,
+     "v1_over": 89.83,
+     "v1_settle": 17,
+     "v1_sse": 0,
+     "v1_iae": 101.7,
+     "v2_over": 93.39,
+     "v2_settle": 19,
+     "v2_sse": 0,
+     "v2_iae": 106.8,
+     "v2_rise": 0.5,
+     "uMin": 50,
+     "uMax": 208.3
+    },
+    {
+     "name": "IMC-PI（真值）",
+     "kp": 1.931,
+     "ki": 1.111,
+     "kd": 0,
+     "v1_over": 30.64,
+     "v1_settle": 5.5,
+     "v1_sse": 0,
+     "v1_iae": 38.7,
+     "v2_over": 30.64,
+     "v2_settle": 5.5,
+     "v2_sse": 0,
+     "v2_iae": 38.7,
+     "v2_rise": 0.5,
+     "uMin": 90,
+     "uMax": 144.6
+    }
+   ]
+  },
+  "接触力环（迟滞主导 τ=1.0 s, L=1.2 s）": {
+   "truth": {
+    "tauEff": 0.7213,
+    "lEff": 1,
+    "K": 0.5,
+    "step": 30
+   },
+   "rows": [
+    {
+     "name": "出厂保守参数",
+     "kp": 1.5,
+     "ki": 0.5,
+     "kd": 0.5,
+     "v1_over": 0,
+     "v1_settle": 18,
+     "v1_sse": 0,
+     "v1_iae": 105,
+     "v2_over": 0,
+     "v2_settle": 18,
+     "v2_sse": 0,
+     "v2_iae": 105,
+     "v2_rise": 7.5,
+     "uMin": 172.6,
+     "uMax": 200
+    },
+    {
+     "name": "Z-N 直接整定（真值）",
+     "kp": 1.731,
+     "ki": 0.866,
+     "kd": 0.866,
+     "v1_over": 11.78,
+     "v1_settle": 16.5,
+     "v1_sse": 0,
+     "v1_iae": 68.6,
+     "v2_over": 10.65,
+     "v2_settle": 15.5,
+     "v2_sse": 0,
+     "v2_iae": 70.1,
+     "v2_rise": 1,
+     "uMin": 173.6,
+     "uMax": 217.9
+    },
+    {
+     "name": "Z-N 直接整定（辨识值）",
+     "kp": 1.68,
+     "ki": 0.8,
+     "kd": 0.882,
+     "v1_over": 9.39,
+     "v1_settle": 16.5,
+     "v1_sse": 0,
+     "v1_iae": 70.7,
+     "v2_over": 8.41,
+     "v2_settle": 15.5,
+     "v2_sse": 0,
+     "v2_iae": 72.2,
+     "v2_rise": 1,
+     "uMin": 173.1,
+     "uMax": 214.4
+    },
+    {
+     "name": "安全折减 ZN（真值）",
+     "kp": 0.838,
+     "ki": 1.162,
+     "kd": 0,
+     "v1_over": 30.49,
+     "v1_settle": 14,
+     "v1_sse": 0,
+     "v1_iae": 87.1,
+     "v2_over": 30.49,
+     "v2_settle": 14,
+     "v2_sse": 0,
+     "v2_iae": 87.1,
+     "v2_rise": 1.5,
+     "uMin": 165.1,
+     "uMax": 222.3
+    },
+    {
+     "name": "安全折减 ZN（辨识值）",
+     "kp": 0.823,
+     "ki": 1.119,
+     "kd": 0,
+     "v1_over": 27.31,
+     "v1_settle": 11,
+     "v1_sse": 0,
+     "v1_iae": 84.2,
+     "v2_over": 27.31,
+     "v2_settle": 11,
+     "v2_sse": 0,
+     "v2_iae": 84.2,
+     "v2_rise": 1.5,
+     "uMin": 164.7,
+     "uMax": 220.1
+    },
+    {
+     "name": "IMC-PI（真值）",
+     "kp": 0.801,
+     "ki": 1.111,
+     "kd": 0,
+     "v1_over": 27.28,
+     "v1_settle": 11,
+     "v1_sse": 0,
+     "v1_iae": 85.2,
+     "v2_over": 27.28,
+     "v2_settle": 11,
+     "v2_sse": 0,
+     "v2_iae": 85.2,
+     "v2_rise": 1.5,
+     "uMin": 164,
+     "uMax": 219.9
+    }
+   ]
+  },
+  "姿态环（τ=0.5 s, L=0.6 s，取 Δt=0.1 s）": {
+   "truth": {
+    "tauEff": 0.4481,
+    "lEff": 0.5000000000000001,
+    "K": 1,
+    "step": 600
+   },
+   "rows": [
+    {
+     "name": "出厂保守参数",
+     "kp": 1.5,
+     "ki": 0.5,
+     "kd": 0.5,
+     "v1_over": 17.6,
+     "v1_settle": 160,
+     "v1_sse": 13.328,
+     "v1_iae": 19318,
+     "v2_over": 18.87,
+     "v2_settle": 160,
+     "v2_sse": 77.243,
+     "v2_iae": 18468.2,
+     "v2_rise": 0.5,
+     "uMin": 1593.2,
+     "uMax": 2600
+    },
+    {
+     "name": "Z-N 直接整定（真值）",
+     "kp": 1.076,
+     "ki": 1.076,
+     "kd": 0.269,
+     "v1_over": 4.69,
+     "v1_settle": 6.8,
+     "v1_sse": 0,
+     "v1_iae": 823.4,
+     "v2_over": 3.41,
+     "v2_settle": 6.9,
+     "v2_sse": 0,
+     "v2_iae": 964.9,
+     "v2_rise": 1.9,
+     "uMin": 1965.1,
+     "uMax": 2580
+    },
+    {
+     "name": "Z-N 直接整定（辨识值）",
+     "kp": 1.044,
+     "ki": 0.994,
+     "kd": 0.274,
+     "v1_over": 3.68,
+     "v1_settle": 6.8,
+     "v1_sse": 0,
+     "v1_iae": 857.9,
+     "v2_over": 2.11,
+     "v2_settle": 6.9,
+     "v2_sse": 0,
+     "v2_iae": 996.8,
+     "v2_rise": 1.9,
+     "uMin": 1960.2,
+     "uMax": 2551.9
+    },
+    {
+     "name": "安全折减 ZN（真值）",
+     "kp": 0.473,
+     "ki": 1.055,
+     "kd": 0,
+     "v1_over": 21.08,
+     "v1_settle": 5.2,
+     "v1_sse": 0,
+     "v1_iae": 829.8,
+     "v2_over": 8.85,
+     "v2_settle": 4.7,
+     "v2_sse": 0,
+     "v2_iae": 1063.3,
+     "v2_rise": 1.9,
+     "uMin": 2056.8,
+     "uMax": 2477
+    },
+    {
+     "name": "安全折减 ZN（辨识值）",
+     "kp": 0.465,
+     "ki": 1.017,
+     "kd": 0,
+     "v1_over": 18.57,
+     "v1_settle": 5.2,
+     "v1_sse": 0,
+     "v1_iae": 812,
+     "v2_over": 7.68,
+     "v2_settle": 4.8,
+     "v2_sse": 0,
+     "v2_iae": 1065.7,
+     "v2_rise": 1.9,
+     "uMin": 2053,
+     "uMax": 2467.8
+    },
+    {
+     "name": "IMC-PI（真值）",
+     "kp": 0.498,
+     "ki": 1.111,
+     "kd": 0,
+     "v1_over": 19.53,
+     "v1_settle": 5,
+     "v1_sse": 0,
+     "v1_iae": 796.3,
+     "v2_over": 9.79,
+     "v2_settle": 5.8,
+     "v2_sse": 0,
+     "v2_iae": 1046.4,
+     "v2_rise": 1.8,
+     "uMin": 2069,
+     "uMax": 2485.4
+    }
+   ]
+  }
+ },
+ "D": {
+  "coupling": [
+   {
+    "aEff": 0.0005,
+    "pReq": 200,
+    "risk": "安全"
+   },
+   {
+    "aEff": 0.0008,
+    "pReq": 125,
+    "risk": "临界（余量 <30%）"
+   },
+   {
+    "aEff": 0.001,
+    "pReq": 100,
+    "risk": "临界（余量 <30%）"
+   },
+   {
+    "aEff": 0.0012,
+    "pReq": 83.33,
+    "risk": "**误报低压报警**"
+   },
+   {
+    "aEff": 0.0015,
+    "pReq": 66.67,
+    "risk": "**误报低压报警**"
+   },
+   {
+    "aEff": 0.002,
+    "pReq": 50,
+    "risk": "**误报低压报警**"
+   },
+   {
+    "aEff": 0.003,
+    "pReq": 33.33,
+    "risk": "**误报低压报警**"
+   },
+   {
+    "aEff": 0.005,
+    "pReq": 20,
+    "risk": "**误报低压报警**"
+   },
+   {
+    "aEff": 0.01,
+    "pReq": 10,
+    "risk": "**误报低压报警**"
+   }
+  ],
+  "forceLaw": [
+   {
+    "v": 0,
+    "ac": 70,
+    "dc": 70,
+    "sigmaMax": 21,
+    "fMin": 7,
+    "fMax": 133
+   },
+   {
+    "v": 40,
+    "ac": 71.55,
+    "dc": 72.48,
+    "sigmaMax": 21.47,
+    "fMin": 7.16,
+    "fMax": 135.95
+   },
+   {
+    "v": 80,
+    "ac": 76.21,
+    "dc": 79.92,
+    "sigmaMax": 22.86,
+    "fMin": 7.62,
+    "fMax": 144.8
+   },
+   {
+    "v": 120,
+    "ac": 83.97,
+    "dc": 92.32,
+    "sigmaMax": 25.19,
+    "fMin": 8.4,
+    "fMax": 159.54
+   },
+   {
+    "v": 160,
+    "ac": 94.83,
+    "dc": 109.68,
+    "sigmaMax": 28.45,
+    "fMin": 9.48,
+    "fMax": 180.18
+   },
+   {
+    "v": 200,
+    "ac": 108.8,
+    "dc": 132,
+    "sigmaMax": 32.64,
+    "fMin": 10.88,
+    "fMax": 206.72
+   },
+   {
+    "v": 250,
+    "ac": 130.63,
+    "dc": 166.88,
+    "sigmaMax": 39.19,
+    "fMin": 13.06,
+    "fMax": 248.19
+   },
+   {
+    "v": 300,
+    "ac": 157.3,
+    "dc": 209.5,
+    "sigmaMax": 47.19,
+    "fMin": 15.73,
+    "fMax": 298.87
+   }
+  ],
+  "dedup": {
+   "steady": {
+    "total": 30,
+    "kept": 6,
+    "dropped": 24,
+    "pct": 80
+   },
+   "worsen": {
+    "total": 30,
+    "kept": 6,
+    "dropped": 24,
+    "pct": 80
+   }
+  }
+ },
+ "E": {
+  "bytes": {
+   "mainOnly": 31,
+   "mainPlusSub": 62
+  },
+  "daily": {
+   "mainOnly": 1.277,
+   "mainPlusSub": 2.554,
+   "fullWave": 98.88
+  },
+  "ratio": 77.4,
+  "ratioSub": 38.7,
+  "seq": [
+   {
+    "status": "0x40",
+    "seq": 1,
+    "extended": true,
+    "subValid": false,
+    "bitmap": 0,
+    "d": "扩展协议首包"
+   },
+   {
+    "status": "0x40",
+    "seq": 65535,
+    "extended": true,
+    "subValid": false,
+    "bitmap": 0,
+    "d": "序号回绕前"
+   },
+   {
+    "status": "0x40",
+    "seq": 0,
+    "extended": true,
+    "subValid": false,
+    "bitmap": 0,
+    "d": "序号 0（保留）"
+   },
+   {
+    "status": "0x0",
+    "seq": 0,
+    "extended": false,
+    "subValid": false,
+    "bitmap": 0,
+    "d": "旧固件（状态字与序号全 0）"
+   },
+   {
+    "status": "0xC2",
+    "seq": 100,
+    "extended": true,
+    "subValid": true,
+    "bitmap": 2,
+    "d": "异常周期（bit7 置位）"
+   }
+  ],
+  "bitmap": [
+   {
+    "bm": "0b000",
+    "n": 0,
+    "types": "—",
+    "levels": "—"
+   },
+   {
+    "bm": "0b001",
+    "n": 1,
+    "types": "高温预警",
+    "levels": "warning"
+   },
+   {
+    "bm": "0b010",
+    "n": 1,
+    "types": "低压报警",
+    "levels": "error"
+   },
+   {
+    "bm": "0b011",
+    "n": 2,
+    "types": "高温预警/低压报警",
+    "levels": "warning/error"
+   },
+   {
+    "bm": "0b100",
+    "n": 1,
+    "types": "高湿预警",
+    "levels": "warning"
+   },
+   {
+    "bm": "0b101",
+    "n": 2,
+    "types": "高温预警/高湿预警",
+    "levels": "warning/warning"
+   },
+   {
+    "bm": "0b110",
+    "n": 2,
+    "types": "低压报警/高湿预警",
+    "levels": "error/warning"
+   },
+   {
+    "bm": "0b111",
+    "n": 3,
+    "types": "高温预警/低压报警/高湿预警",
+    "levels": "warning/error/warning"
+   }
+  ]
+ }
+}
