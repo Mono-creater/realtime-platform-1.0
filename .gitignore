@@ -65,3 +65,11 @@ data/runtime-state-*.tmp
 # 台架实测输出（CSV/JSON/导出）
 bench/out/*
 !bench/out/.gitkeep
+
+# ---------- 上传规则：不发布 .md / .bat 文档与脚本 ----------
+*.md
+*.bat
+!package-lock.md
+
+# 图传工具缓存（体积过大，不上传）
+tools/图传/cache/

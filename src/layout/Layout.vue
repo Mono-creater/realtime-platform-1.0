@@ -40,12 +40,12 @@ async function onLogout() {
 <style scoped>
 .layout {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   position: relative;
 }
 .right-content {
-  height: 100vh;
+  height: 100%;
   overflow: auto;
 }
 .user-chip {

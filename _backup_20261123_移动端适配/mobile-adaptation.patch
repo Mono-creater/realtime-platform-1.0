@@ -1,0 +1,810 @@
+diff --git a/src/App.vue b/src/App.vue
+index 8a5583b..446fe42 100644
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -1,18 +1,208 @@
+ <script setup>
+-import { RouterLink, RouterView } from 'vue-router'
++import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
++import { RouterView } from 'vue-router'
++
++// ---- 大屏适配 ----
++// 看板按 1440×1080 设计。手机端保持这个设计画布，用 transform 等比缩小：
++//   · 横屏：画布缩到屏宽，高度自然超出屏幕 —— 由浏览器原生上下滚动查看（面板不再被裁切）
++//   · 竖屏：整块旋转 90°，保证字能看清（旋转后纵向滚动在屏幕上是横向位移，故竖屏仅作预览）
++const BASE_W = 1440
++const BASE_H = 1080
++
++const appRef = ref(null)
++const boxRef = ref(null)
++const stage = ref(null)
++const isMobile = ref(false)
++const isPortrait = ref(false)
++const hintVisible = ref(false)
++let hintTimer = null
++
++const mqPortrait = window.matchMedia('(orientation: portrait)')
++const uaMobile = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)
++const smallScreen = Math.min(window.screen.width, window.screen.height) < 768
++
++function resetStage() {
++  const app = appRef.value
++  const box = boxRef.value
++  const el = stage.value
++  if (!app || !box || !el) return
++  app.style.overflowY = ''
++  app.style.overflowX = ''
++  box.style.height = ''
++  el.style.width = ''
++  el.style.height = ''
++  el.style.transform = ''
++  el.style.position = ''
++  el.style.top = ''
++  el.style.left = ''
++  document.documentElement.style.overflow = ''
++}
++
++function layout() {
++  isMobile.value = uaMobile || smallScreen
++  isPortrait.value = mqPortrait.matches
++
++  const app = appRef.value
++  const box = boxRef.value
++  const el = stage.value
++  if (!app || !box || !el) return
++
++  if (!isMobile.value) {
++    resetStage()
++    return
++  }
++
++  const vw = document.documentElement.clientWidth || window.innerWidth
++  const vh = document.documentElement.clientHeight || window.innerHeight
++  if (!vw || !vh) return
++
++  if (isPortrait.value) {
++    // 竖屏：整块旋转 90°，并整体缩放到「完整可见」（contain），不裁切任何内容
++    const k = Math.min(vw / BASE_H, vh / BASE_W)
++    const scaledW = BASE_W * k   // 旋转后占屏幕高度
++    const scaledH = BASE_H * k   // 旋转后占屏幕宽度
++    app.style.overflowY = 'hidden'
++    app.style.overflowX = 'hidden'
++    box.style.height = '100%'
++    el.style.position = 'fixed'
++    el.style.top = '0'
++    el.style.left = '0'
++    el.style.width = BASE_W + 'px'
++    el.style.height = BASE_H + 'px'
++    el.style.transformOrigin = 'top left'
++    el.style.transform =
++      'translate(' + Math.round(scaledH + (vw - scaledH) / 2) + 'px, ' +
++      Math.round((vh - scaledW) / 2) + 'px) rotate(90deg) scale(' + k + ')'
++    if (!hintVisible.value) {
++      hintVisible.value = true
++      clearTimeout(hintTimer)
++      hintTimer = setTimeout(() => { hintVisible.value = false }, 5000)
++    }
++  } else {
++    // 横屏：设计画布 1440×1080 等比缩到屏宽，高度不足由原生滚动补齐
++    const k = vw / BASE_W
++    app.style.overflowY = 'auto'
++    app.style.overflowX = 'hidden'
++    box.style.height = Math.round(BASE_H * k) + 'px'
++    el.style.position = 'absolute'
++    el.style.top = '0'
++    el.style.left = '0'
++    el.style.width = BASE_W + 'px'
++    el.style.height = BASE_H + 'px'
++    el.style.transformOrigin = 'top left'
++    el.style.transform = 'scale(' + k + ')'
++    hintVisible.value = false
++  }
++  document.documentElement.style.overflow = 'hidden'
++}
++
++onMounted(async () => {
++  await nextTick()
++  layout()
++  mqPortrait.addEventListener('change', layout)
++  window.addEventListener('resize', layout)
++  window.addEventListener('orientationchange', layout)
++})
++
++onBeforeUnmount(() => {
++  clearTimeout(hintTimer)
++  mqPortrait.removeEventListener('change', layout)
++  window.removeEventListener('resize', layout)
++  window.removeEventListener('orientationchange', layout)
++})
+ </script>
+ 
+ <template>
+-  <div class="app">
+-    <RouterView />
++  <div ref="appRef" class="app">
++    <!-- 滚动容器：高度 = 缩放宽高，撑出可滚动范围 -->
++    <div ref="boxRef" class="scrollbox">
++      <div ref="stage" class="stage">
++        <RouterView />
++      </div>
++    </div>
++
++    <!-- 竖屏提示：轻量浮层，不遮挡内容，几秒后自动消失 -->
++    <transition name="hint-fade">
++      <div v-if="isMobile && isPortrait && hintVisible" class="rotate-hint">
++        <svg class="hint-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
++          <path
++            d="M7 4h6a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"
++            fill="none"
++            stroke="currentColor"
++            stroke-width="1.6"
++          />
++          <path d="M15 8h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-1" fill="none" stroke="currentColor" stroke-width="1.6" />
++        </svg>
++        <span>请把手机横过来，横屏后可上下滚动浏览</span>
++      </div>
++    </transition>
+   </div>
+ </template>
+ 
+ <style>
++html,
++body,
++#app {
++  height: 100%;
++  margin: 0;
++  padding: 0;
++}
++
+ .app {
+   width: 100%;
+   height: 100%;
+   padding: 0;
+   margin: 0;
++  background: #0b182c;
++  overflow: hidden;
++  -webkit-overflow-scrolling: touch;
++}
++
++.scrollbox {
++  position: relative;
++  width: 100%;
++  height: 100%;
++  overflow: hidden;
++}
++
++.stage {
++  width: 100%;
++  height: 100%;
++  overflow: hidden;
++}
++
++/* 竖屏提示浮层 */
++.rotate-hint {
++  position: fixed;
++  left: 50%;
++  bottom: 28px;
++  transform: translateX(-50%);
++  z-index: 9999;
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  padding: 10px 16px;
++  border-radius: 22px;
++  background: rgba(10, 25, 45, 0.92);
++  border: 1px solid rgba(0, 198, 255, 0.45);
++  color: #d8e8fa;
++  font-size: 14px;
++  pointer-events: none;
++}
++.hint-icon {
++  color: #00c6ff;
++  animation: hint-rotate 2s ease-in-out infinite;
++}
++@keyframes hint-rotate {
++  0%, 30% { transform: rotate(0deg); }
++  65%, 100% { transform: rotate(90deg); }
++}
++.hint-fade-enter-active,
++.hint-fade-leave-active {
++  transition: opacity 0.5s ease;
++}
++.hint-fade-enter-from,
++.hint-fade-leave-to {
++  opacity: 0;
+ }
+ </style>
+diff --git a/src/components/LeftMenu.vue b/src/components/LeftMenu.vue
+index ab79418..8cc0c0d 100644
+--- a/src/components/LeftMenu.vue
++++ b/src/components/LeftMenu.vue
+@@ -144,7 +144,7 @@ watch(
+ 
+ <style scoped>
+ .menu {
+-  height: 100vh;
++  height: 100%;
+   overflow-y: auto;
+   scrollbar-width: none;
+   padding-top: 4px;
+diff --git a/src/layout/Layout.vue b/src/layout/Layout.vue
+index 215e2be..5e16752 100644
+--- a/src/layout/Layout.vue
++++ b/src/layout/Layout.vue
+@@ -1,13 +1,24 @@
+ <template>
+-  <div class="layout">
++  <div ref="rootRef" class="layout">
++    <!-- 移动端汉堡按钮 -->
++    <button v-if="isMobile" class="mobile-menu-btn" aria-label="打开菜单" @click="menuOpen = true">
++      <span></span><span></span><span></span>
++    </button>
++    <!-- 移动端抽屉菜单 -->
++      <el-drawer v-model="menuOpen" direction="ltr" size="72%" :with-header="false" class="mobile-drawer">
++        <div class="drawer-inner">
++          <LogoComponent />
++          <LeftMenu></LeftMenu>
++        </div>
++      </el-drawer>
+     <el-row class="tac">
+-      <!-- 左侧菜单栏 -->
+-      <el-col :span="3">
++      <!-- 左侧菜单栏（桌面端） -->
++      <el-col v-if="!isMobile" :span="3">
+         <LogoComponent />
+         <LeftMenu></LeftMenu>
+       </el-col>
+       <!-- 右侧内容区域 -->
+-      <el-col class="right-content" :span="21">
++      <el-col class="right-content" :span="isMobile ? 24 : 21">
+         <router-view></router-view>
+       </el-col>
+     </el-row>
+@@ -23,13 +34,47 @@
+ </template>
+ 
+ <script setup>
+-import { useRouter } from 'vue-router'
++import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
++import { useRoute, useRouter } from 'vue-router'
+ import LogoComponent from '@/components/LogoComponent.vue'
+ import LeftMenu from '@/components/LeftMenu.vue'
+ import { useAuthStore } from '@/stores/auth'
+ 
+ const auth = useAuthStore()
+ const router = useRouter()
++const route = useRoute()
++
++// 是否用移动端布局：按「布局容器自身宽度」判断，而不是视口宽度。
++// 手机端整块看板是放大到 1440 再整体缩放的，容器实际宽度仍是 1440，
++// 因此应保持桌面布局（左侧菜单常驻），不出现汉堡按钮。
++const rootRef = ref(null)
++const isMobile = ref(false)
++let ro = null
++
++function measure() {
++  const el = rootRef.value
++  if (!el) return
++  isMobile.value = el.clientWidth > 0 && el.clientWidth < 768
++}
++
++onMounted(() => {
++  measure()
++  if (typeof ResizeObserver !== 'undefined' && rootRef.value) {
++    ro = new ResizeObserver(measure)
++    ro.observe(rootRef.value)
++  } else {
++    window.addEventListener('resize', measure)
++  }
++})
++
++onBeforeUnmount(() => {
++  if (ro) ro.disconnect()
++  else window.removeEventListener('resize', measure)
++})
++
++// 移动端抽屉菜单开关；路由切换后自动收起
++const menuOpen = ref(false)
++watch(() => route.fullPath, () => { menuOpen.value = false })
+ 
+ async function onLogout() {
+   await auth.logout()
+@@ -40,13 +85,15 @@ async function onLogout() {
+ <style scoped>
+ .layout {
+   width: 100%;
+-  height: 100vh;
++  height: 100%;
+   overflow: hidden;
+   position: relative;
+ }
+ .right-content {
+-  height: 100vh;
+-  overflow: auto;
++  height: 100%;
++  overflow-y: auto;
++  overflow-x: hidden;
++  -webkit-overflow-scrolling: touch;
+ }
+ .user-chip {
+   position: absolute;
+@@ -90,4 +137,47 @@ async function onLogout() {
+   margin-left: auto;
+   flex-shrink: 0;
+ }
++
++/* ---- 移动端适配 ---- */
++.mobile-menu-btn {
++  display: none;
++}
++.drawer-inner {
++  height: 100%;
++  overflow-y: auto;
++}
++
++@media (max-width: 768px) {
++  .mobile-menu-btn {
++    position: fixed;
++    top: 12px;
++    right: 12px;
++    z-index: 2000;
++    width: 42px;
++    height: 36px;
++    border: 1px solid rgba(255, 255, 255, 0.2);
++    border-radius: 8px;
++    background: rgba(10, 25, 45, 0.85);
++    cursor: pointer;
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    justify-content: center;
++    gap: 4px;
++    padding: 0;
++  }
++  .mobile-menu-btn span {
++    display: block;
++    width: 20px;
++    height: 2px;
++    border-radius: 1px;
++    background: #cfe3f7;
++  }
++  .user-chip {
++    width: auto;
++    max-width: 60%;
++    bottom: 10px;
++    left: 10px;
++  }
++}
+ </style>
+diff --git a/src/views/Login.vue b/src/views/Login.vue
+index 2308708..7fcab3e 100644
+--- a/src/views/Login.vue
++++ b/src/views/Login.vue
+@@ -76,7 +76,7 @@ onMounted(async () => {
+ <style scoped>
+ .login-page {
+   width: 100%;
+-  height: 100vh;
++  height: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+@@ -84,7 +84,8 @@ onMounted(async () => {
+   color: #fff;
+ }
+ .login-card {
+-  width: 360px;
++  width: min(360px, calc(100vw - 32px));
++  box-sizing: border-box;
+   padding: 32px 28px;
+   border-radius: 16px;
+   background: rgba(255, 255, 255, 0.04);
+diff --git a/src/views/SmartDetection/BoxAlarmMonitor.vue b/src/views/SmartDetection/BoxAlarmMonitor.vue
+index cf1fa6d..e7514bf 100644
+--- a/src/views/SmartDetection/BoxAlarmMonitor.vue
++++ b/src/views/SmartDetection/BoxAlarmMonitor.vue
+@@ -8,6 +8,16 @@
+           <span class="poll-dot"></span>
+           {{ pollError ? ('轮询异常' + (pollErrorMsg ? '：' + pollErrorMsg : '')) : `HTTP 轮询中 · 300ms · 共 ${allData.length} 条` }}
+         </span>
++        <el-button
++          v-if="allData.length"
++          size="default"
++          type="danger"
++          plain
++          class="clear-btn"
++          @click="clearAll"
++        >
++          🗑 清空全部
++        </el-button>
+         <el-input
+           v-model="keyword"
+           placeholder="搜索车号/弓位/故障类型..."
+@@ -44,6 +54,30 @@
+             <span class="sensor-text">{{ sensorText(row.sensorData) }}</span>
+           </template>
+         </el-table-column>
++        <el-table-column label="AI 判读" min-width="220" align="left">
++          <template #default="{ row }">
++            <template v-if="row.vision === null">
++              <span class="muted">推理中…</span>
++            </template>
++            <template v-else-if="row.vision === undefined">
++              <span class="muted">—</span>
++            </template>
++            <template v-else-if="row.vision.ok">
++              <el-tag :type="visionTag(row.vision.level)" size="small" effect="dark">
++                {{ row.vision.level }}
++              </el-tag>
++              <div class="ai-text">{{ row.vision.text }}</div>
++              <div v-if="row.vision.reasons && row.vision.reasons.length" class="ai-reasons">
++                <div v-for="(r, i) in row.vision.reasons" :key="i">· {{ r }}</div>
++              </div>
++              <div v-if="row.vision.metrics && row.vision.metrics.L" class="ai-metrics">
++                条长 {{ row.vision.metrics.L }}px · 厚 {{ row.vision.metrics.thick_median }}px
++                (最薄 {{ row.vision.metrics.thick_p05 }}px) · 磨损候选 {{ row.vision.wear.length }} 处
++              </div>
++            </template>
++            <span v-else class="muted">推理失败：{{ row.vision.error }}</span>
++          </template>
++        </el-table-column>
+         <el-table-column label="图片" width="90" align="center">
+           <template #default="{ row }">
+             <el-button v-if="row.imageUrl" size="small" type="primary" plain @click="openImage(row)">
+@@ -60,6 +94,19 @@
+             <span v-else class="muted">—</span>
+           </template>
+         </el-table-column>
++        <el-table-column label="操作" width="96" align="center" fixed="right">
++          <template #default="{ row }">
++            <el-button
++              size="small"
++              type="danger"
++              plain
++              :loading="deletingId === Number(row.id)"
++              @click="removeRow(row)"
++            >
++              🗑 删除
++            </el-button>
++          </template>
++        </el-table-column>
+       </el-table>
+ 
+       <div v-if="filteredData.length === 0" class="empty-placeholder">
+@@ -106,6 +153,8 @@ const videoDialog = ref(false)
+ const videoRow = ref(null)
+ // 新告警高亮（最近一次出现的新 id 集合，短暂高亮后淡出）
+ const freshIds = ref(new Set())
++// 正在删除的记录 id（只让那一行的按钮转圈，不锁整张表）
++const deletingId = ref(0)
+ let pollTimer = null
+ let freshTimer = null
+ let lastMaxId = null
+@@ -185,7 +234,9 @@ async function poll() {
+       freshTimer = setTimeout(() => { freshIds.value = new Set() }, 8000)
+     }
+     if (allData.value.length > 0) {
+-      lastMaxId = Math.max(...allData.value.map(r => Number(r.id) || 0))
++      // 单调递增：删掉本地记录后不能把游标往回退，否则增量拉取会重复灌数据
++      const m = Math.max(...allData.value.map(r => Number(r.id) || 0))
++      lastMaxId = lastMaxId == null ? m : Math.max(lastMaxId, m)
+     }
+   } catch (err) {
+     pollError.value = true
+@@ -195,7 +246,16 @@ async function poll() {
+ }
+ 
+ function openImage(row) {
+-  viewerImage.value = row.imageUrl
++  // 有 AI 标注图就优先看标注图（框 + 磨损候选都画好了），没有才退回原图
++  viewerImage.value = row?.vision?.annotatedUrl || row?.imageUrl
++}
++
++/** AI 判读标签配色：只有"疑似异常"给红，避免把"定位完成"也渲染成告警 */
++function visionTag(level) {
++  if (level === '疑似异常') return 'danger'
++  if (level === '待复核') return 'warning'
++  if (level === '未检出') return 'info'
++  return 'success'
+ }
+ 
+ function openVideo(row) {
+@@ -203,6 +263,82 @@ function openVideo(row) {
+   videoDialog.value = true
+ }
+ 
++/** 删除单条上传记录（服务端会连带删掉它的图片和视频文件） */
++async function removeRow(row) {
++  const id = Number(row.id)
++  try {
++    await ElMessageBox.confirm(
++      `编号 ${id}｜${row.carNumber || '—'} · ${row.camera || '—'} · ${row.faultType || '—'}\n\n图片和视频会一并删除，且不可恢复。`,
++      '确认删除这条数据？',
++      {
++        type: 'warning',
++        confirmButtonText: '删除',
++        cancelButtonText: '取消',
++        confirmButtonClass: 'el-button--danger',
++        customStyle: { whiteSpace: 'pre-line' },
++      }
++    )
++  } catch {
++    return // 用户取消
++  }
++  deletingId.value = id
++  try {
++    const res = await fetch(`/api/alarm/${id}`, { method: 'DELETE' })
++    const data = await res.json().catch(() => ({}))
++    if (!res.ok || data.success === false) {
++      throw new Error(data.error || `HTTP ${res.status}`)
++    }
++    allData.value = allData.value.filter(r => Number(r.id) !== id)
++    // 正在播放/预览的是这条，顺手关掉，别让弹窗挂着一个已删文件
++    if (videoRow.value && Number(videoRow.value.id) === id) {
++      videoDialog.value = false
++      videoRow.value = null
++    }
++    ElMessage.success(`已删除 ${id}`)
++  } catch (err) {
++    ElMessage.error(`删除失败：${err.message}`)
++  } finally {
++    deletingId.value = 0
++  }
++}
++
++/** 清空当前列表里的全部上传记录（含图片/视频） */
++async function clearAll() {
++  const n = allData.value.length
++  if (!n) {
++    ElMessage.info('暂无记录')
++    return
++  }
++  try {
++    await ElMessageBox.confirm(
++      `将删除全部 ${n} 条记录及其图片、视频文件，不可恢复。`,
++      '确认清空？',
++      {
++        type: 'warning',
++        confirmButtonText: '全部删除',
++        cancelButtonText: '取消',
++        confirmButtonClass: 'el-button--danger',
++      }
++    )
++  } catch {
++    return
++  }
++  try {
++    const res = await fetch('/api/alarms?all=1', { method: 'DELETE' })
++    const data = await res.json().catch(() => ({}))
++    if (!res.ok || data.success === false) {
++      throw new Error(data.error || `HTTP ${res.status}`)
++    }
++    allData.value = []
++    freshIds.value = new Set()
++    videoDialog.value = false
++    videoRow.value = null
++    ElMessage.success(`已清空 ${data.removed ?? n} 条`)
++  } catch (err) {
++    ElMessage.error(`清空失败：${err.message}`)
++  }
++}
++
+ function onVisibility() {
+   if (document.hidden) {
+     if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+@@ -286,7 +422,14 @@ onBeforeUnmount(() => {
+ .search-input {
+   width: 220px;
+ }
+-.search-input :deep(.el-input__wrapper) {
++/* 清空按钮：暗色底上给个可辨认的边框，别和背景糊在一起 */
++.clear-btn {
++  flex-shrink: 0;
++}
++.clear-btn :deep(span),
++.clear-btn {
++  color: #ff9c9c;
++}.search-input :deep(.el-input__wrapper) {
+   background: rgba(255, 255, 255, 0.08);
+   border-radius: 20px;
+   box-shadow: none;
+@@ -338,6 +481,27 @@ onBeforeUnmount(() => {
+   color: rgba(255, 255, 255, 0.35);
+ }
+ 
++.ai-text {
++  margin-top: 4px;
++  font-size: 12px;
++  line-height: 1.45;
++  color: rgba(255, 255, 255, 0.82);
++}
++
++.ai-reasons {
++  margin-top: 3px;
++  font-size: 11px;
++  line-height: 1.5;
++  color: #ffd08a;
++}
++
++.ai-metrics {
++  margin-top: 3px;
++  font-size: 11px;
++  color: rgba(255, 255, 255, 0.45);
++  font-variant-numeric: tabular-nums;
++}
++
+ .empty-placeholder {
+   position: absolute;
+   top: 50%;
+diff --git a/src/views/SmartDetection/Line_Pantograph2.vue b/src/views/SmartDetection/Line_Pantograph2.vue
+index b06c054..2db6850 100644
+--- a/src/views/SmartDetection/Line_Pantograph2.vue
++++ b/src/views/SmartDetection/Line_Pantograph2.vue
+@@ -83,7 +83,7 @@ onMounted(() => {
+ <style scoped>
+ .pantograph {
+   width: 100%;
+-  height: 100vh;
++  height: 100%;
+   background-color: #09182d;
+   padding: 10px;
+   box-sizing: border-box;
+diff --git a/src/views/SmartDetection/MaintenancePlan.vue b/src/views/SmartDetection/MaintenancePlan.vue
+index 81c5c8b..8d5ad45 100644
+--- a/src/views/SmartDetection/MaintenancePlan.vue
++++ b/src/views/SmartDetection/MaintenancePlan.vue
+@@ -34,7 +34,7 @@
+         <span class="hint">优先级从高到低；依据列写明"为什么现在做"</span>
+       </div>
+       <div class="v3-table">
+-        <el-table :data="list" height="calc(100vh - 330px)" style="width:100%">
++        <el-table :data="list" height="calc(100% - 330px)" style="width:100%">
+           <el-table-column label="优先级" width="85" align="center">
+             <template #default="{ row }"><span class="v3-level" :class="row.level">{{ row.level }}</span></template>
+           </el-table-column>
+diff --git a/src/views/SmartDetection/MonitorGlobal.vue b/src/views/SmartDetection/MonitorGlobal.vue
+index 2dee239..639453f 100644
+--- a/src/views/SmartDetection/MonitorGlobal.vue
++++ b/src/views/SmartDetection/MonitorGlobal.vue
+@@ -39,7 +39,7 @@
+           <div class="panel-header">
+             <span class="header-icon"><el-icon><Bell /></el-icon></span>
+             实时告警
+-            <span class="badge">{{ alarmList.length }}</span>
++            <span class="badge">{{ alarmTotal }}</span>
+             <!-- 「随机生成」为造数调试入口，正式演示前隐藏。
+                  保留开关而非直接删除：需要造数时把 SHOW_RANDOM_ALARM 改为 true 即可，
+                  addRandomAlarm() 与后端 POST /api/alert 均已修复可用。 -->
+@@ -53,7 +53,7 @@
+               随机生成
+             </el-button>
+           </div>
+-          <el-table :data="alarmList" max-height="220" border style="width:100%">
++          <el-table :data="alarmList" border style="width:100%">
+             <el-table-column label="时间" width="160">
+               <template #default="{ row }">{{ formatTime(row.timeFull || row.time) }}</template>
+             </el-table-column>
+@@ -66,7 +66,17 @@
+               </template>
+             </el-table-column>
+           </el-table>
+-          <div class="table-footer" v-if="alarmList.length === 0">暂无实时告警</div>
++          <div class="alarm-pager" v-if="alarmTotal > PAGE_SIZE">
++            <el-pagination
++              v-model:current-page="alarmPage"
++              :page-size="PAGE_SIZE"
++              :total="alarmTotal"
++              layout="prev, pager, next"
++              background
++              size="small"
++            />
++          </div>
++          <div class="table-footer" v-if="alarmTotal === 0">暂无实时告警</div>
+         </div>
+       </el-col>
+       <el-col :span="10">
+@@ -136,8 +146,19 @@ const statCards = ref([])
+ const filteredWarningList = computed(() => {
+   return fullWarningList.value.filter(item => ALARM_TYPES.includes(item.content))
+ })
+-// 显示列表（最新10条过滤后的）
+-const alarmList = computed(() => filteredWarningList.value.slice(0, 10))
++// 显示列表（分页，每页 8 条）
++const PAGE_SIZE = 8
++const alarmPage = ref(1)
++const alarmTotal = computed(() => filteredWarningList.value.length)
++const alarmList = computed(() => {
++  const start = (alarmPage.value - 1) * PAGE_SIZE
++  return filteredWarningList.value.slice(start, start + PAGE_SIZE)
++})
++// 数据减少时把页码收回到有效范围
++watch(alarmTotal, (n) => {
++  const maxPage = Math.max(1, Math.ceil(n / PAGE_SIZE))
++  if (alarmPage.value > maxPage) alarmPage.value = maxPage
++})
+ 
+ // 运行状态条：原为写死的 4 条线路健康度，改为平台真实指标
+ const statusBars = computed(() => {
+@@ -749,6 +770,17 @@ onUnmounted(() => {
+   font-size: 14px;
+ }
+ 
++.alarm-pager {
++  display: flex;
++  justify-content: flex-end;
++  padding: 12px 2px 0;
++}
++.alarm-pager :deep(.el-pagination) {
++  --el-pagination-button-bg-color: rgba(255, 255, 255, 0.06);
++  --el-pagination-hover-color: #00c6ff;
++  color: #cfe3f7;
++}
++
+ /* ---------- 图表 ---------- */
+ .chart-container {
+   width: 100%;
+diff --git a/src/views/SmartDetection/MonitorLine.vue b/src/views/SmartDetection/MonitorLine.vue
+index bf769e9..a56165b 100644
+--- a/src/views/SmartDetection/MonitorLine.vue
++++ b/src/views/SmartDetection/MonitorLine.vue
+@@ -30,7 +30,7 @@ import DataTables from '@/components/DataTables.vue'
+ <style scoped>
+ .monitor-line {
+   width: 100%;
+-  height: 100vh;
++  height: 100%;
+   box-sizing: border-box;
+   padding: 10px;
+   display: flex;
+diff --git a/src/views/SmartDetection/PantographWarning.vue b/src/views/SmartDetection/PantographWarning.vue
+index 8ef10b4..78a6484 100644
+--- a/src/views/SmartDetection/PantographWarning.vue
++++ b/src/views/SmartDetection/PantographWarning.vue
+@@ -272,7 +272,7 @@ function previewImage() {
+ <style scoped>
+ .warning-detail {
+   width: 100%;
+-  height: 100vh;
++  height: 100%;
+   background: #0f2592;
+   padding: 20px;
+   box-sizing: border-box;
+diff --git a/src/views/SmartDetection/ReplacementLedger.vue b/src/views/SmartDetection/ReplacementLedger.vue
+index 2e30c6d..46052a8 100644
+--- a/src/views/SmartDetection/ReplacementLedger.vue
++++ b/src/views/SmartDetection/ReplacementLedger.vue
+@@ -38,7 +38,7 @@
+         <span class="hint">共 {{ filtered.length }} 条，按日期倒序</span>
+       </div>
+       <div class="v3-table">
+-        <el-table :data="filtered" height="calc(100vh - 330px)" style="width:100%">
++        <el-table :data="filtered" height="calc(100% - 330px)" style="width:100%">
+           <el-table-column prop="date" label="更换日期" width="120" align="center" sortable />
+           <el-table-column prop="line" label="线路" width="90" align="center" />
+           <el-table-column prop="train" label="车号" width="90" align="center" />
+diff --git a/src/views/SmartDetection/TrainList.vue b/src/views/SmartDetection/TrainList.vue
+index d099c1b..d709d43 100644
+--- a/src/views/SmartDetection/TrainList.vue
++++ b/src/views/SmartDetection/TrainList.vue
+@@ -34,7 +34,7 @@
+         <span class="hint">按健康度升序，最需要处理的排在最前</span>
+       </div>
+       <div class="v3-table">
+-        <el-table :data="sorted" height="calc(100vh - 330px)" @row-click="goArchive" style="width:100%">
++        <el-table :data="sorted" height="calc(100% - 330px)" @row-click="goArchive" style="width:100%">
+           <el-table-column prop="line" label="线路" width="90" align="center" />
+           <el-table-column prop="train" label="车号" width="90" align="center" />
+           <el-table-column prop="position" label="弓位" width="80" align="center" />
+diff --git a/src/views/index.vue b/src/views/index.vue
+index 8cedec4..f168740 100644
+--- a/src/views/index.vue
++++ b/src/views/index.vue
+@@ -13,7 +13,7 @@ import Layout from '@/layout/Layout.vue'
+   background-size: 100% 100%;
+   background-position: center top;
+   background-repeat: no-repeat;
+-  height: 100vh;
++  height: 100%;
+   width: 100%;
+   margin: 0;
+   padding: 0;

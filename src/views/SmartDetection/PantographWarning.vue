@@ -272,7 +272,7 @@ function previewImage() {
 <style scoped>
 .warning-detail {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   background: #0f2592;
   padding: 20px;
   box-sizing: border-box;

@@ -83,7 +83,7 @@ onMounted(() => {
 <style scoped>
 .pantograph {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   background-color: #09182d;
   padding: 10px;
   box-sizing: border-box;

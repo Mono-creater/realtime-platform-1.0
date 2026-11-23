@@ -13,7 +13,7 @@ import Layout from '@/layout/Layout.vue'
   background-size: 100% 100%;
   background-position: center top;
   background-repeat: no-repeat;
-  height: 100vh;
+  height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;

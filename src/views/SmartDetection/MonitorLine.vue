@@ -30,7 +30,7 @@ import DataTables from '@/components/DataTables.vue'
 <style scoped>
 .monitor-line {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   box-sizing: border-box;
   padding: 10px;
   display: flex;

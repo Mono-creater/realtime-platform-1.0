@@ -24,6 +24,10 @@
 
 const net = require('net');
 const ModbusRTU = require('modbus-serial');
+
+// 与平台共用同一份 .env：否则本文件的 PLC_SIM_INTERVAL 改了也不生效，
+// 会出现「组包 1 s、平台 2 s 轮询」→ 链路监测把正常跳号判成 50% 丢包。
+try { process.loadEnvFile(require('path').join(__dirname, '.env')); } catch (_) { /* 无 .env 忽略 */ }
 const {
     THRESHOLDS,
     STATUS_BITS,

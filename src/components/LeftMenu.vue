@@ -144,7 +144,7 @@ watch(
 
 <style scoped>
 .menu {
-  height: 100vh;
+  height: 100%;
   overflow-y: auto;
   scrollbar-width: none;
   padding-top: 4px;

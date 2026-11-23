@@ -99,12 +99,23 @@ async function main() {
   console.log('平台上传地址:', CONFIG.platformUrl);
 
   if (mode === 'single') {
-    for (const cam of CAMERAS) await onceCam(cam);
+    // 单次模式逐台执行：某一路相机不通（如只装了前弓）不应让整次联调判失败
+    let ok = 0;
+    for (const cam of CAMERAS) {
+      try {
+        await onceCam(cam);
+        ok++;
+      } catch (e) {
+        console.error(`[${cam.camera}] 抓帧/上传失败: ${e.message}`);
+      }
+    }
+    if (ok === 0) process.exitCode = 1;
     return;
   }
 
   if (mode === 'loop') {
     console.log(`循环模式：每 ${CONFIG.intervalMs} ms 逐台抓一张（Ctrl+C 停止）`);
+    console.log('⚠️  这是「周期上传」联调模式，不适合生产：正式运行请用 record-slice-upload.js record + auto-slice.js（只在告警时上传）。');
     let n = 0;
     while (true) {
       const round = ++n;

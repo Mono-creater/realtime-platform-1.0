@@ -34,7 +34,7 @@
         <span class="hint">优先级从高到低；依据列写明"为什么现在做"</span>
       </div>
       <div class="v3-table">
-        <el-table :data="list" height="calc(100vh - 330px)" style="width:100%">
+        <el-table :data="list" height="calc(100% - 330px)" style="width:100%">
           <el-table-column label="优先级" width="85" align="center">
             <template #default="{ row }"><span class="v3-level" :class="row.level">{{ row.level }}</span></template>
           </el-table-column>

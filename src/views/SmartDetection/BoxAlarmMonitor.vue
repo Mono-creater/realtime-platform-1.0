@@ -8,6 +8,16 @@
           <span class="poll-dot"></span>
           {{ pollError ? ('轮询异常' + (pollErrorMsg ? '：' + pollErrorMsg : '')) : `HTTP 轮询中 · 300ms · 共 ${allData.length} 条` }}
         </span>
+        <el-button
+          v-if="allData.length"
+          size="default"
+          type="danger"
+          plain
+          class="clear-btn"
+          @click="clearAll"
+        >
+          🗑 清空全部
+        </el-button>
         <el-input
           v-model="keyword"
           placeholder="搜索车号/弓位/故障类型..."
@@ -44,6 +54,30 @@
             <span class="sensor-text">{{ sensorText(row.sensorData) }}</span>
           </template>
         </el-table-column>
+        <el-table-column label="AI 判读" min-width="220" align="left">
+          <template #default="{ row }">
+            <template v-if="row.vision === null">
+              <span class="muted">推理中…</span>
+            </template>
+            <template v-else-if="row.vision === undefined">
+              <span class="muted">—</span>
+            </template>
+            <template v-else-if="row.vision.ok">
+              <el-tag :type="visionTag(row.vision.level)" size="small" effect="dark">
+                {{ row.vision.level }}
+              </el-tag>
+              <div class="ai-text">{{ row.vision.text }}</div>
+              <div v-if="row.vision.reasons && row.vision.reasons.length" class="ai-reasons">
+                <div v-for="(r, i) in row.vision.reasons" :key="i">· {{ r }}</div>
+              </div>
+              <div v-if="row.vision.metrics && row.vision.metrics.L" class="ai-metrics">
+                条长 {{ row.vision.metrics.L }}px · 厚 {{ row.vision.metrics.thick_median }}px
+                (最薄 {{ row.vision.metrics.thick_p05 }}px) · 磨损候选 {{ row.vision.wear.length }} 处
+              </div>
+            </template>
+            <span v-else class="muted">推理失败：{{ row.vision.error }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="图片" width="90" align="center">
           <template #default="{ row }">
             <el-button v-if="row.imageUrl" size="small" type="primary" plain @click="openImage(row)">
@@ -58,6 +92,19 @@
               ▶ 播放
             </el-button>
             <span v-else class="muted">—</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="96" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              size="small"
+              type="danger"
+              plain
+              :loading="deletingId === Number(row.id)"
+              @click="removeRow(row)"
+            >
+              🗑 删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -106,6 +153,8 @@ const videoDialog = ref(false)
 const videoRow = ref(null)
 // 新告警高亮（最近一次出现的新 id 集合，短暂高亮后淡出）
 const freshIds = ref(new Set())
+// 正在删除的记录 id（只让那一行的按钮转圈，不锁整张表）
+const deletingId = ref(0)
 let pollTimer = null
 let freshTimer = null
 let lastMaxId = null
@@ -185,7 +234,9 @@ async function poll() {
       freshTimer = setTimeout(() => { freshIds.value = new Set() }, 8000)
     }
     if (allData.value.length > 0) {
-      lastMaxId = Math.max(...allData.value.map(r => Number(r.id) || 0))
+      // 单调递增：删掉本地记录后不能把游标往回退，否则增量拉取会重复灌数据
+      const m = Math.max(...allData.value.map(r => Number(r.id) || 0))
+      lastMaxId = lastMaxId == null ? m : Math.max(lastMaxId, m)
     }
   } catch (err) {
     pollError.value = true
@@ -195,12 +246,97 @@ async function poll() {
 }
 
 function openImage(row) {
-  viewerImage.value = row.imageUrl
+  // 有 AI 标注图就优先看标注图（框 + 磨损候选都画好了），没有才退回原图
+  viewerImage.value = row?.vision?.annotatedUrl || row?.imageUrl
+}
+
+/** AI 判读标签配色：只有"疑似异常"给红，避免把"定位完成"也渲染成告警 */
+function visionTag(level) {
+  if (level === '疑似异常') return 'danger'
+  if (level === '待复核') return 'warning'
+  if (level === '未检出') return 'info'
+  return 'success'
 }
 
 function openVideo(row) {
   videoRow.value = row
   videoDialog.value = true
+}
+
+/** 删除单条上传记录（服务端会连带删掉它的图片和视频文件） */
+async function removeRow(row) {
+  const id = Number(row.id)
+  try {
+    await ElMessageBox.confirm(
+      `编号 ${id}｜${row.carNumber || '—'} · ${row.camera || '—'} · ${row.faultType || '—'}\n\n图片和视频会一并删除，且不可恢复。`,
+      '确认删除这条数据？',
+      {
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        confirmButtonClass: 'el-button--danger',
+        customStyle: { whiteSpace: 'pre-line' },
+      }
+    )
+  } catch {
+    return // 用户取消
+  }
+  deletingId.value = id
+  try {
+    const res = await fetch(`/api/alarm/${id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error || `HTTP ${res.status}`)
+    }
+    allData.value = allData.value.filter(r => Number(r.id) !== id)
+    // 正在播放/预览的是这条，顺手关掉，别让弹窗挂着一个已删文件
+    if (videoRow.value && Number(videoRow.value.id) === id) {
+      videoDialog.value = false
+      videoRow.value = null
+    }
+    ElMessage.success(`已删除 ${id}`)
+  } catch (err) {
+    ElMessage.error(`删除失败：${err.message}`)
+  } finally {
+    deletingId.value = 0
+  }
+}
+
+/** 清空当前列表里的全部上传记录（含图片/视频） */
+async function clearAll() {
+  const n = allData.value.length
+  if (!n) {
+    ElMessage.info('暂无记录')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `将删除全部 ${n} 条记录及其图片、视频文件，不可恢复。`,
+      '确认清空？',
+      {
+        type: 'warning',
+        confirmButtonText: '全部删除',
+        cancelButtonText: '取消',
+        confirmButtonClass: 'el-button--danger',
+      }
+    )
+  } catch {
+    return
+  }
+  try {
+    const res = await fetch('/api/alarms?all=1', { method: 'DELETE' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error || `HTTP ${res.status}`)
+    }
+    allData.value = []
+    freshIds.value = new Set()
+    videoDialog.value = false
+    videoRow.value = null
+    ElMessage.success(`已清空 ${data.removed ?? n} 条`)
+  } catch (err) {
+    ElMessage.error(`清空失败：${err.message}`)
+  }
 }
 
 function onVisibility() {
@@ -286,7 +422,14 @@ onBeforeUnmount(() => {
 .search-input {
   width: 220px;
 }
-.search-input :deep(.el-input__wrapper) {
+/* 清空按钮：暗色底上给个可辨认的边框，别和背景糊在一起 */
+.clear-btn {
+  flex-shrink: 0;
+}
+.clear-btn :deep(span),
+.clear-btn {
+  color: #ff9c9c;
+}.search-input :deep(.el-input__wrapper) {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   box-shadow: none;
@@ -336,6 +479,27 @@ onBeforeUnmount(() => {
 
 .muted {
   color: rgba(255, 255, 255, 0.35);
+}
+
+.ai-text {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ai-reasons {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #ffd08a;
+}
+
+.ai-metrics {
+  margin-top: 3px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  font-variant-numeric: tabular-nums;
 }
 
 .empty-placeholder {

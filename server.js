@@ -121,6 +121,58 @@ const ALLOW_SIM_FALLBACK = String(
     : (process.env.NODE_ENV === 'production' ? 'false' : 'true')
 ).toLowerCase() !== 'false';
 
+/**
+ * 图传链路（摄像头）是否已接入。
+ *
+ * 为什么要它来决定"能不能用模拟模式"：
+ * 没有摄像头时，模拟数据只是让界面好看，一眼假；一旦摄像头真的在图传，
+ * 界面上是**真视频 + 假温度压力**，运维根本分不出来 PLC 已经断了 ——
+ * 这是最危险的一类静默失真。所以只要检测到有摄像头启用，就锁死真实模式，
+ * 宁可报"链路 BAD"也不能拿模拟值顶替。
+ *
+ * 判定优先级：
+ *   1) 环境变量 CAMERA_LINK=1/0（显式指定，便于车下演示）
+ *   2) 扫描 tools/<任一子目录>/.env，存在 CAMn_IP 非空且 CAMn_ENABLED 不为 0 即视为已接入
+ */
+function detectCameraLink() {
+  const forced = process.env.CAMERA_LINK;
+  if (forced !== undefined && String(forced).trim() !== '') {
+    return /^(1|true|yes|on)$/i.test(String(forced).trim());
+  }
+  try {
+    const toolsDir = path.join(__dirname, 'tools');
+    if (!fs.existsSync(toolsDir)) return false;
+    for (const name of fs.readdirSync(toolsDir)) {
+      const envFile = path.join(toolsDir, name, '.env');
+      if (!fs.existsSync(envFile)) continue;
+      const text = fs.readFileSync(envFile, 'utf8');
+      const get = (key) => {
+        const m = text.match(new RegExp('^[ \\t]*' + key + '[ \\t]*=[ \\t]*(.*)$', 'm'));
+        return m ? m[1].trim().replace(/^["']|["']$/g, '') : '';
+      };
+      for (const i of [1, 2, 3, 4]) {
+        const ip = get(`CAM${i}_IP`);
+        if (ip && get(`CAM${i}_ENABLED`) !== '0') return true;
+      }
+    }
+  } catch (err) {
+    console.warn('[camera-link] 探测图传配置失败，按未接入处理：', err.message);
+  }
+  return false;
+}
+
+/** 图传链路是否已接入（启动时探测一次；运行期可用 /api/health 查看） */
+const CAMERA_LINK = detectCameraLink();
+/** 有摄像头在图传时，是否仍允许人工切到模拟模式（默认禁止，车下演示可设 ALLOW_SIM_WITH_CAMERA=1） */
+const ALLOW_SIM_WITH_CAMERA = /^(1|true|yes|on)$/i.test(
+  String(process.env.ALLOW_SIM_WITH_CAMERA || '').trim()
+);
+/**
+ * 实际生效的"允许回退模拟"开关。
+ * = 配置允许 且 没有摄像头在图传（或有摄像头但明确放行人工切换）。
+ */
+const SIM_FALLBACK_ACTIVE = ALLOW_SIM_FALLBACK && !(CAMERA_LINK && !ALLOW_SIM_WITH_CAMERA);
+
 
 // 条件加载 Prisma：只要配置了 DATABASE_URL 就连接，
 // 与"当前数据源是 PLC 还是模拟器"解耦 —— 模拟模式下同样需要读取历史告警、
@@ -202,11 +254,26 @@ let currentOverLimit = [
  */
 function enrichWarning(warning) {
     const w = stripDemoMarkOf(warning);
+    // 图传回填：告警本身（PLC 判据）与视频（边缘盒切片）是两次写入，
+    // 媒体地址存运行态，响应时合并，前端点“播放”才能拿到视频。
+    let merged = w;
     try {
-        const pg = pantographArchive.resolveForWarning(warning);
-        if (pg) return { ...w, pantographId: pg.id, context: pg.context };
+        const media = (runtimeStore.get('media', {}) || {})[w.id];
+        if (media) {
+            merged = {
+                ...w,
+                imageUrl: media.imageUrl || w.imageUrl || '',
+                videoUrl: media.videoUrl || w.videoUrl || '',
+                ...(media.eventId ? { eventId: media.eventId } : {}),
+                mediaAt: media.at,
+            };
+        }
+    } catch { /* 读取失败不影响告警输出 */ }
+    try {
+        const pg = pantographArchive.resolveForWarning(merged);
+        if (pg) return { ...merged, pantographId: pg.id, context: pg.context };
     } catch { /* 绑定失败不阻断告警输出 */ }
-    return w;
+    return merged;
 }
 
 function clientWarningList() {
@@ -494,7 +561,10 @@ app.get('/api/health', (req, res) => {
     version: require('./package.json').version,
     uptimeSec: Math.round(process.uptime()),
     mode: SIMULATION_MODE ? 'simulation' : 'real',
-    fallbackAllowed: ALLOW_SIM_FALLBACK,
+    // fallbackAllowed 给的是【实际生效值】：有摄像头在图传时恒为 false
+    fallbackAllowed: SIM_FALLBACK_ACTIVE,
+    cameraLink: CAMERA_LINK,
+    simLockedByCamera: CAMERA_LINK && !ALLOW_SIM_WITH_CAMERA,
     plc: {
       connected: Boolean(plcClient),
       host: PLC_CONFIG.host,
@@ -876,6 +946,35 @@ app.get('/api/warning/:id', async (req, res) => {
   }
 });
 
+app.post('/api/warning/:id/media', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: '无效的ID' });
+  const body = req.body || {};
+  const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : '';
+  const videoUrl = typeof body.videoUrl === 'string' ? body.videoUrl : '';
+  const eventId = typeof body.eventId === 'string' ? body.eventId : '';
+  if (!imageUrl && !videoUrl) return res.status(400).json({ error: '缺少 imageUrl 或 videoUrl' });
+
+  const all = runtimeStore.get('media', {}) || {};
+  const prev = all[id] || {};
+  all[id] = {
+    imageUrl: imageUrl || prev.imageUrl || '',
+    videoUrl: videoUrl || prev.videoUrl || '',
+    eventId: eventId || prev.eventId || '',
+    at: Date.now(),
+  };
+  runtimeStore.set('media', all);
+
+  const w = currentWarningList.find(x => x.id === id);
+  if (w) {
+    if (all[id].imageUrl) w.imageUrl = all[id].imageUrl;
+    if (all[id].videoUrl) w.videoUrl = all[id].videoUrl;
+    if (all[id].eventId) w.eventId = all[id].eventId;
+    broadcastWarningChange([w]);
+  }
+  res.json({ success: true, id, imageUrl: all[id].imageUrl, videoUrl: all[id].videoUrl, broadcast: Boolean(w) });
+});
+
 app.delete('/api/warning/:id', async (req, res) => {
   const { id } = req.params;
   const numericId = Number(id);
@@ -1099,6 +1198,96 @@ const boxAlarmJsonPath = path.resolve(process.env.BOX_ALARM_JSON || path.join(up
 const BOX_ALARM_PERSIST = String(process.env.BOX_ALARM_PERSIST || 'true').toLowerCase() !== 'false';
 const MAX_BOX_ALARMS = Number(process.env.BOX_ALARM_MAX) || 1000;
 
+// ---- 碳滑板视觉推理（Python 服务，F:/平台/视觉/tools/vision_service.py） ----
+// 关掉：.env 里设 VISION_ENABLED=0；换地址：VISION_URL
+const VISION_URL = (process.env.VISION_URL || 'http://127.0.0.1:8771').replace(/\/+$/, '');
+const VISION_ENABLED = String(process.env.VISION_ENABLED || '1').toLowerCase() !== '0';
+const VISION_TIMEOUT = Number(process.env.VISION_TIMEOUT_MS) || 30000;
+// 0.30 是分割模型出轮廓的下限：0.40 时竖直细条会整条漏掉，只能退回矩形
+const VISION_CONF = Number(process.env.VISION_CONF) || 0.30;
+const visionDir = path.join(uploadDir, 'vision');
+if (VISION_ENABLED) fs.mkdirSync(visionDir, { recursive: true });
+
+/**
+ * 对一张黑盒子告警图跑碳滑板视觉推理，结果写回 record.vision。
+ *
+ * 为什么异步不等待：黑盒子是弱网设备，上传响应多等 3 秒它就会重传，
+ * 白白吃掉本来就紧张的上行带宽。所以先回 200，推理完再更新 record —— 前端
+ * 300 ms 轮询 /api/get-alarm-list 自然会拿到带结论的那一版。
+ *
+ * 失败不影响告警本身：vision.ok=false + error，人工照常处置。
+ */
+async function runVision(record) {
+  if (!VISION_ENABLED) return;
+  if (!record || !record.imageUrl) {
+    if (record) record.vision = { ok: false, error: '无图片，跳过视觉推理' };
+    return;
+  }
+  const rel = String(record.imageUrl).replace(/^\/?uploads\//, '');
+  const abs = path.resolve(uploadDir, rel);
+  const root = path.resolve(uploadDir) + path.sep;
+  if (!abs.startsWith(root)) {
+    record.vision = { ok: false, error: '图片路径越界，已拒绝' };
+    return;
+  }
+  const t0 = Date.now();
+  try {
+    const resp = await fetch(`${VISION_URL}/infer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: abs, conf: VISION_CONF }),
+      signal: AbortSignal.timeout(VISION_TIMEOUT),
+    });
+    const data = await resp.json();
+    if (!data || data.ok !== true) {
+      record.vision = { ok: false, error: (data && data.error) || '推理服务返回异常' };
+      console.warn(`⚠️ [视觉] #${record.id} 推理失败: ${record.vision.error}`);
+      persistBoxAlarms();
+      return;
+    }
+    // 标注图搬到平台自己的 uploads 下，前端才能直接引用
+    let annotatedUrl = '';
+    if (data.annotated && fs.existsSync(data.annotated)) {
+      const name = `${record.id}-${Date.now()}.jpg`;
+      const dst = path.join(visionDir, name);
+      try {
+        fs.copyFileSync(data.annotated, dst);
+        annotatedUrl = `/uploads/vision/${name}`;
+      } catch (e) {
+        console.warn(`⚠️ [视觉] 标注图复制失败: ${e.message}`);
+      }
+    }
+    record.vision = {
+      ok: true,
+      level: (data.verdict && data.verdict.level) || '未知',
+      text: (data.verdict && data.verdict.text) || '',
+      reasons: (data.verdict && data.verdict.reasons) || [],
+      // 分割模型给的是多边形（贴合形态），OBB 兜底时是四点多边形
+      shapes: (data.polygons || data.boxes || []).length,
+      shape: data.shape || 'obb',
+      metrics: data.metrics || {},
+      wear: (data.wear || []).map((w) => ({
+        kind: w.kind, severity: w.severity,
+        depth_px: w.depth_px, peak_rel: w.peak_rel,
+      })),
+      annotatedUrl,
+      elapseMs: Date.now() - t0,
+      at: new Date().toISOString(),
+    };
+    persistBoxAlarms();
+    console.log(`🔎 [视觉] #${record.id} ${record.vision.level} ` +
+      `轮廓=${record.vision.shapes}(${record.vision.shape}) 磨损候选=${record.vision.wear.length} ` +
+      `耗时=${record.vision.elapseMs}ms`);
+  } catch (e) {
+    const msg = e && e.name === 'TimeoutError'
+      ? `推理超时（>${VISION_TIMEOUT}ms）`
+      : (e && e.message) || String(e);
+    record.vision = { ok: false, error: msg };
+    console.warn(`⚠️ [视觉] #${record.id} 失败: ${msg}（视觉服务是否在 ${VISION_URL} 运行？）`);
+    persistBoxAlarms();
+  }
+}
+
 fs.mkdirSync(boxAlarmDir, { recursive: true });
 
 let boxAlarmList = [];
@@ -1233,6 +1422,8 @@ app.post('/api/upload-alarm', (req, res) => {
       imageUrl: imageFile ? `/uploads/box-alarm/${imageFile.filename}` : '',
       videoUrl: videoFile ? `/uploads/box-alarm/${videoFile.filename}` : '',
       receivedAt: new Date().toISOString(),
+      // null = 排队中（runVision 完成后填）；服务关闭时直接给结论，避免前端一直显示"排队"
+      vision: VISION_ENABLED ? null : { ok: false, error: '视觉推理未启用（VISION_ENABLED=0）' },
     };
 
     boxAlarmList.push(record);
@@ -1242,6 +1433,8 @@ app.post('/api/upload-alarm', (req, res) => {
     persistBoxAlarms();
     console.log(`📥 [黑盒子] #${record.id} 车号=${record.carNumber} 弓位=${record.camera || '--'} 类型=${record.faultType} 图=${record.imageUrl || '无'} 视频=${record.videoUrl || '无'}`);
     res.json({ success: true, id: record.id, imageUrl: record.imageUrl, videoUrl: record.videoUrl });
+    // 先回包再推理：弱网设备等不起，结论随后由前端轮询取回
+    void runVision(record);
   });
 });
 
@@ -1255,6 +1448,71 @@ app.get('/api/get-alarm-list', (req, res) => {
   res.json({ success: true, count: list.length, list });
 });
 
+/**
+ * 删除黑盒子告警引用的媒体文件。
+ * 只允许删 uploads 目录内的文件 —— 库里存的是 URL，绝不能让一个畸形路径把系统文件删了。
+ */
+function removeBoxMedia(record) {
+  if (!record) return;
+  for (const url of [record.imageUrl, record.videoUrl]) {
+    if (!url || typeof url !== 'string') continue;
+    const rel = url.replace(/^\/?uploads\//, '');
+    const abs = path.resolve(uploadDir, rel);
+    const root = path.resolve(uploadDir) + path.sep;
+    if (!abs.startsWith(root)) {
+      console.warn(`⚠️ 拒绝删除 uploads 之外的路径: ${abs}`);
+      continue;
+    }
+    try {
+      if (fs.existsSync(abs)) fs.unlinkSync(abs);
+    } catch (err) {
+      console.warn(`⚠️ 删除媒体文件失败 ${abs}: ${err.message}`);
+    }
+  }
+}
+
+/** DELETE /api/alarm/:id —— 删除单条黑盒子告警（连同其图片/视频） */
+app.delete('/api/alarm/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ success: false, error: '无效的ID' });
+  const idx = boxAlarmList.findIndex((r) => Number(r.id) === id);
+  if (idx < 0) return res.status(404).json({ success: false, error: '记录不存在' });
+  const [removed] = boxAlarmList.splice(idx, 1);
+  removeBoxMedia(removed);
+  persistBoxAlarms(true);
+  console.log(`🗑️ [黑盒子] 已删除 #${id}（剩余 ${boxAlarmList.length} 条）`);
+  res.json({ success: true, id, remaining: boxAlarmList.length });
+});
+
+/** DELETE /api/alarms?ids=1,2 或 ?all=1 —— 批量/全清黑盒子告警（连同媒体文件） */
+app.delete('/api/alarms', (req, res) => {
+  const all = String(req.query.all || '') === '1';
+  const ids = String(req.query.ids || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s !== '')       // 注意：Number('') === 0 且 isFinite(0) 为真，不滤空会绕过下面的校验
+    .map((s) => Number(s))
+    .filter((n) => Number.isFinite(n));
+  if (!all && !ids.length) {
+    return res.status(400).json({ success: false, error: '需提供 ?ids=1,2 或 ?all=1' });
+  }
+  const keep = [];
+  const dropped = [];
+  for (const r of boxAlarmList) {
+    if (all || ids.includes(Number(r.id))) {
+      dropped.push(r);
+      removeBoxMedia(r);
+    } else {
+      keep.push(r);
+    }
+  }
+  boxAlarmList.length = 0;
+  boxAlarmList.push(...keep);
+  if (dropped.length) persistBoxAlarms(true);
+  console.log(`🗑️ [黑盒子] 批量删除 ${dropped.length} 条（剩余 ${boxAlarmList.length} 条）`);
+  res.json({ success: true, removed: dropped.length, remaining: boxAlarmList.length });
+});
+
 // 自定义媒体目录时也要能静态访问（默认在 uploads 下，由下面的 /uploads 统一托管）
 if (path.resolve(boxAlarmDir) !== path.resolve(path.join(uploadDir, 'box-alarm'))) {
   app.use('/uploads/box-alarm', express.static(boxAlarmDir));
@@ -1266,7 +1524,8 @@ app.use('/uploads', express.static(uploadDir));
 // 3. 数据采集模块（支持真实PLC和模拟模式）
 // ============================================================
 const PLC_CONFIG = {
-    host: process.env.PLC_HOST || '192.168.1.88',
+    // 默认值不再指向相机 IP（192.168.1.88），避免漏配 PLC_HOST 时误连摄像头
+    host: process.env.PLC_HOST || '192.168.1.10',
     port: parseInt(process.env.PLC_PORT) || 502,
     unitId: parseInt(process.env.PLC_UNIT_ID) || 1,
     registers: {
@@ -1280,7 +1539,10 @@ const PLC_CONFIG = {
         writeHeight: parseInt(process.env.PLC_REG_WRITE_HEIGHT) || 2022
     },
     readInterval: parseInt(process.env.PLC_INTERVAL) || 2000,
-    windowSize: parseInt(process.env.PLC_WINDOW) || 10
+    windowSize: parseInt(process.env.PLC_WINDOW) || 10,
+    // 无线网桥链路：图传突发时单次事务可能抖动到数十毫秒，
+    // 默认 5 s 会让一次丢包阻塞两个轮询周期，故单独可配（推荐 3000）。
+    timeout: parseInt(process.env.PLC_TIMEOUT) || 5000
 };
 
 let plcClient = null;
@@ -1293,6 +1555,7 @@ let isSimulationPaused = false;
 // PLC 重连退避（失败后 2s 起步，翻倍至 30s 封顶）
 const PLC_RECONNECT_INITIAL_MS = 2000;
 const PLC_RECONNECT_MAX_MS = 30000;
+const PLC_CONNECT_TIMEOUT_MS = parseInt(process.env.PLC_CONNECT_TIMEOUT) || 3000;
 let plcReconnectDelay = PLC_RECONNECT_INITIAL_MS;
 let plcRetryAt = 0;
 
@@ -1502,8 +1765,18 @@ async function connectPLC() {
     isPLCConnecting = true;
     try {
         const client = new ModbusRTU();
-        await client.connectTCP(PLC_CONFIG.host, { port: PLC_CONFIG.port });
+        // 无线链路建链超时：默认 TCP 建连会挂到 OS 超时（20 s+），
+        // 会造成一次断链把采集线程卡死十几秒，故显式 3 s 上限。
+        let timer;
+        await Promise.race([
+            client.connectTCP(PLC_CONFIG.host, { port: PLC_CONFIG.port }),
+            new Promise((_, reject) => {
+                timer = setTimeout(() => reject(new Error(`TCP 建连超时（${PLC_CONNECT_TIMEOUT_MS} ms）`)), PLC_CONNECT_TIMEOUT_MS);
+            })
+        ]).finally(() => clearTimeout(timer));
         client.setID(PLC_CONFIG.unitId);
+        // 单次事务超时（读寄存器）：网桥丢包时快速失败，交给退避重连而非阻塞
+        client.setTimeout(PLC_CONFIG.timeout);
         console.log(`✅ 汇川 Easy320 PLC 连接成功 (${PLC_CONFIG.host}:${PLC_CONFIG.port})`);
         isPLCConnecting = false;
         return client;
@@ -1584,6 +1857,9 @@ async function readAndBufferSensorData() {
         }
     } catch (err) {
         console.error('❌ 读取传感器数据失败:', err.message);
+        // 无线链路断链时 socket 可能处于半开状态：必须显式关闭，否则每次重连都漏一个 fd，
+        // 长时间跑（车载/台架 8 h+）会把句柄耗尽。
+        try { plcClient && plcClient.close(() => {}); } catch (_) { /* 已断开则忽略 */ }
         plcClient = null;
         plcReconnectDelay = Math.min(plcReconnectDelay * 2, PLC_RECONNECT_MAX_MS);
         plcRetryAt = Date.now() + plcReconnectDelay;
@@ -1665,14 +1941,18 @@ async function startRealCollection() {
         setTimeout(readAndBufferSensorData, 500);
         console.log('✅ 切换到真实PLC模式');
     } else {
-        if (ALLOW_SIM_FALLBACK) {
+        if (SIM_FALLBACK_ACTIVE) {
             console.warn('⚠️ 真实PLC连接失败，自动切换到模拟模式');
             SIMULATION_MODE = true;
             startSimulation();
         } else {
             // 生产口径：宁可报告"链路坏"，也不拿模拟数据顶替
             SIMULATION_MODE = false;
-            console.error('⛔ 真实 PLC 连接失败，且已禁用模拟回退（ALLOW_SIM_FALLBACK=false）');
+            if (ALLOW_SIM_FALLBACK && CAMERA_LINK) {
+                console.error('⛔ 真实 PLC 连接失败：检测到摄像头在图传，已锁定真实模式（禁止模拟回退）');
+            } else {
+                console.error('⛔ 真实 PLC 连接失败，且已禁用模拟回退（ALLOW_SIM_FALLBACK=false）');
+            }
             console.error('   平台保持真实模式：链路质量置为 BAD，采集循环按退避策略持续重连。');
             pipeline.link.onError();
             if (!realInterval) realInterval = setInterval(readAndBufferSensorData, PLC_CONFIG.readInterval);
@@ -1685,7 +1965,9 @@ app.get('/api/plc/mode', (req, res) => {
     res.json({
         mode: SIMULATION_MODE ? 'simulation' : 'real',
         connected: Boolean(plcClient),
-        fallbackAllowed: ALLOW_SIM_FALLBACK,
+        fallbackAllowed: SIM_FALLBACK_ACTIVE,
+        cameraLink: CAMERA_LINK,
+        simLockedByCamera: CAMERA_LINK && !ALLOW_SIM_WITH_CAMERA,
         retryInMs: Math.max(0, plcRetryAt - Date.now()),
     });
 });
@@ -1697,6 +1979,17 @@ app.post('/api/plc/mode', async (req, res) => {
     }
     if ((mode === 'simulation' && SIMULATION_MODE) || (mode === 'real' && !SIMULATION_MODE)) {
         return res.json({ mode: mode, message: '已经是该模式' });
+    }
+
+    // 有摄像头在图传时禁止人工切到模拟模式：
+    // 界面上是真视频 + 假数据，运维分辨不出 PLC 已断链，属于最危险的静默失真。
+    if (mode === 'simulation' && CAMERA_LINK && !ALLOW_SIM_WITH_CAMERA) {
+        return res.status(409).json({
+            error: '已接入摄像头图传，禁止开启模拟模式',
+            hint: '确需车下演示：设 ALLOW_SIM_WITH_CAMERA=1 后重启；若本次确实没有摄像头在图传，设 CAMERA_LINK=0',
+            mode: SIMULATION_MODE ? 'simulation' : 'real',
+            cameraLink: true,
+        });
     }
 
     if (mode === 'simulation') {
@@ -1734,7 +2027,8 @@ app.post('/api/plc/mode', async (req, res) => {
         mode: actual,
         requested: mode,
         connected,
-        fallbackAllowed: ALLOW_SIM_FALLBACK,
+        fallbackAllowed: SIM_FALLBACK_ACTIVE,
+        cameraLink: CAMERA_LINK,
         message,
     });
 });
@@ -2015,6 +2309,15 @@ const PORT = process.env.PORT || 3000;
             console.warn('⚠️ 已启用认证但未配置 API_TOKEN：黑盒子 POST /api/upload-alarm 将被拒绝（设备需 X-API-Token）');
         }
     });
+
+    // 启动即声明数据源口径，避免"以为在看真数据"
+    if (CAMERA_LINK) {
+        console.log(
+            SIM_FALLBACK_ACTIVE
+                ? '📷 检测到摄像头图传已接入；但 ALLOW_SIM_WITH_CAMERA 已放行模拟模式（演示口径，勿用于在线运营）'
+                : '📷 检测到摄像头图传已接入 → 已锁定真实模式：PLC 断链不再回退模拟，宁可报 BAD'
+        );
+    }
 
     if (SIMULATION_MODE) {
         startSimulation();

@@ -38,7 +38,7 @@
         <span class="hint">共 {{ filtered.length }} 条，按日期倒序</span>
       </div>
       <div class="v3-table">
-        <el-table :data="filtered" height="calc(100vh - 330px)" style="width:100%">
+        <el-table :data="filtered" height="calc(100% - 330px)" style="width:100%">
           <el-table-column prop="date" label="更换日期" width="120" align="center" sortable />
           <el-table-column prop="line" label="线路" width="90" align="center" />
           <el-table-column prop="train" label="车号" width="90" align="center" />

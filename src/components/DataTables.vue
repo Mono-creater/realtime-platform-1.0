@@ -234,7 +234,9 @@ onMounted(() => {
   color: #3be6c1;
 }
 .empty-tip {
-  height: 220px;
+  /* 无数据时不再占满 220px，避免手机/横屏下出现大片空白 */
+  height: auto;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;

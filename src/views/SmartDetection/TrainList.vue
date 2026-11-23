@@ -34,7 +34,7 @@
         <span class="hint">按健康度升序，最需要处理的排在最前</span>
       </div>
       <div class="v3-table">
-        <el-table :data="sorted" height="calc(100vh - 330px)" @row-click="goArchive" style="width:100%">
+        <el-table :data="sorted" height="calc(100% - 330px)" @row-click="goArchive" style="width:100%">
           <el-table-column prop="line" label="线路" width="90" align="center" />
           <el-table-column prop="train" label="车号" width="90" align="center" />
           <el-table-column prop="position" label="弓位" width="80" align="center" />
