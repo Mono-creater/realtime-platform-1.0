@@ -181,6 +181,9 @@ onMounted(() => {
 .metro_img {
   width: 100%;
   height: 96px;
+  /* 顶部留 14px 给「1位/2位」标注：图内标签不再被 overflow:hidden 裁掉 */
+  padding-top: 14px;
+  box-sizing: border-box;
   position: relative;
   overflow: hidden;
   transition: transform 1.2s cubic-bezier(0.77, 0, 0.18, 1);
@@ -212,12 +215,12 @@ onMounted(() => {
 
 .label-1 {
   color: #467ada;
-  top: -8px;
+  top: 0;
   left: 31%;
 }
 
 .label-2 {
-  top: -10px;
+  top: 0;
   left: 70%;
 }
 
