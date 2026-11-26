@@ -96,9 +96,9 @@ function cookieOf(res) {
         r = await req('/api/history', { cookie: vwCookie });
         chk('登出后读取恢复 401', r.status === 401, String(r.status));
 
-        // 状态汇总
+        // 状态汇总：环境账号 admin/operator/viewer 三个（3.0 起新增管理员角色）
         r = await req('/api/health');
-        chk('health 暴露账号与拦截计数', r.body.auth.accounts.length === 2 && typeof r.body.auth.denied === 'number',
+        chk('health 暴露账号与拦截计数', r.body.auth.accounts.length === 3 && typeof r.body.auth.denied === 'number',
             `accounts=${r.body.auth.accounts.length} denied=${r.body.auth.denied}`);
 
     } catch (err) {

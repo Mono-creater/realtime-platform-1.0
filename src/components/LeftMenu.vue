@@ -68,6 +68,7 @@
         </template>
         <el-menu-item index="monitor_car">控制台</el-menu-item>
         <el-menu-item index="box_alarm_monitor">黑盒告警</el-menu-item>
+        <el-menu-item v-if="auth.canManage" index="user_management">用户管理</el-menu-item>
       </el-sub-menu>
     </el-menu>
   </div>
@@ -79,9 +80,11 @@ import { useRouter, useRoute } from 'vue-router'
 import {
   Odometer, Van, Tools, DataAnalysis, Setting,
 } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
+const auth = useAuthStore()
 
 // 菜单 key → 路由 name（一一对应，不再多个 key 指向同一页）
 const MENU_ROUTE_NAME = {
@@ -101,6 +104,7 @@ const MENU_ROUTE_NAME = {
   report: 'Reports',
   monitor_car: 'MonitorCar',
   box_alarm_monitor: 'BoxAlarmMonitor',
+  user_management: 'UserManagement',
 }
 
 // 路由 name → 菜单 key（用于高亮）
@@ -117,7 +121,7 @@ const MENU_GROUP = {
   ops_center: 'g-maint', replacement_ledger: 'g-maint', maintenance_plan: 'g-maint',
   fault_analysis: 'g-analysis', wear_forecast: 'g-analysis',
   health_assessment: 'g-analysis', report: 'g-analysis',
-  monitor_car: 'g-system', box_alarm_monitor: 'g-system',
+  monitor_car: 'g-system', box_alarm_monitor: 'g-system', user_management: 'g-system',
 }
 
 const activeKey = ref('monitor_line')

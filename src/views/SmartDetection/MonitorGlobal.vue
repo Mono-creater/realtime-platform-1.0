@@ -62,7 +62,7 @@
             <el-table-column prop="worker" label="工号" />
             <el-table-column label="操作" width="80" align="center">
               <template #default="{ row }">
-                <el-button size="small" type="danger" @click.stop="deleteAlarm(row.id)">删除</el-button>
+                <PermissionButton level="admin" size="small" type="danger" @click.stop="deleteAlarm(row.id)">删除</PermissionButton>
               </template>
             </el-table-column>
           </el-table>
@@ -111,6 +111,7 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { useAlarmStore } from '@/stores/alarms'
 import { PANTOGRAPH_ALARM_TYPES, computeHealthIndex, healthColor as getHealthColor } from '@/utils/alarm-types'
+import PermissionButton from '@/components/PermissionButton.vue'
 
 const router = useRouter()
 

@@ -10,12 +10,12 @@
         <span v-if="packetSeq !== null" class="ck-tag">seq={{ packetSeq }}</span>
       </div>
       <div class="ck-actions">
-        <el-button size="small" :type="mode === 'simulation' ? 'warning' : 'primary'" @click="toggleMode" :loading="modeLoading">
+        <PermissionButton level="operator" size="small" :type="mode === 'simulation' ? 'warning' : 'primary'" @click="toggleMode" :loading="modeLoading">
           {{ mode === 'simulation' ? '模拟模式' : '真实模式' }}
-        </el-button>
-        <el-button v-if="mode === 'simulation'" size="small" :type="simulationPaused ? 'success' : 'info'" @click="togglePause" :loading="pauseLoading">
+        </PermissionButton>
+        <PermissionButton v-if="mode === 'simulation'" level="operator" size="small" :type="simulationPaused ? 'success' : 'info'" @click="togglePause" :loading="pauseLoading">
           {{ simulationPaused ? '继续' : '暂停' }}
-        </el-button>
+        </PermissionButton>
         <span class="ck-time">{{ currentTime }}</span>
       </div>
     </header>
@@ -81,17 +81,17 @@
         </div>
 
         <div class="loop-params">
-          <label>Kp<el-input-number v-model="loop.params.kp" :min="0" :max="100" :step="0.1" size="small" controls-position="right" @change="onPidChange(loop.key)" /></label>
-          <label>Ki<el-input-number v-model="loop.params.ki" :min="0" :max="50" :step="0.05" size="small" controls-position="right" @change="onPidChange(loop.key)" /></label>
-          <label>Kd<el-input-number v-model="loop.params.kd" :min="0" :max="50" :step="0.05" size="small" controls-position="right" @change="onPidChange(loop.key)" /></label>
-          <label>目标<el-input-number v-model="loop.params.target" :min="0" :max="loop.key === 'force' ? 1000 : 2600" :step="1" size="small" controls-position="right" @change="onPidChange(loop.key)" /></label>
+          <label>Kp<el-input-number v-model="loop.params.kp" :min="0" :max="100" :step="0.1" size="small" controls-position="right" @change="onPidChange(loop.key)" :disabled="!auth.canOperate" /></label>
+          <label>Ki<el-input-number v-model="loop.params.ki" :min="0" :max="50" :step="0.05" size="small" controls-position="right" @change="onPidChange(loop.key)" :disabled="!auth.canOperate" /></label>
+          <label>Kd<el-input-number v-model="loop.params.kd" :min="0" :max="50" :step="0.05" size="small" controls-position="right" @change="onPidChange(loop.key)" :disabled="!auth.canOperate" /></label>
+          <label>目标<el-input-number v-model="loop.params.target" :min="0" :max="loop.key === 'force' ? 1000 : 2600" :step="1" size="small" controls-position="right" @change="onPidChange(loop.key)" :disabled="!auth.canOperate" /></label>
         </div>
 
         <div class="loop-tune">
-          <el-button size="small" type="primary" plain :disabled="tuneBusy !== null && tuneBusy !== loop.key" :loading="tuneLoading && tuneBusy === loop.key" @click="startTune(loop.key)">
+          <PermissionButton level="operator" size="small" type="primary" plain :disabled="tuneBusy !== null && tuneBusy !== loop.key" :loading="tuneLoading && tuneBusy === loop.key" @click="startTune(loop.key)">
             Z-N 阶跃整定
-          </el-button>
-          <el-button v-if="tuneInfo && tuneInfo.loop === loop.key && tuneInfo.state === 'sampling'" size="small" type="danger" plain @click="cancelTune">取消</el-button>
+          </PermissionButton>
+          <PermissionButton v-if="tuneInfo && tuneInfo.loop === loop.key && tuneInfo.state === 'sampling'" level="operator" size="small" type="danger" plain @click="cancelTune">取消</PermissionButton>
           <el-progress v-if="tuneInfo && tuneInfo.loop === loop.key && tuneInfo.state === 'sampling'" :percentage="tuneInfo.progressPct" :stroke-width="5" class="tune-progress" />
         </div>
 
@@ -173,9 +173,12 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import echarts from '@/utils/echarts'
 import api from '@/utils/api'
+import { useAuthStore } from '@/stores/auth'
 import socket from '@/socket'
+import PermissionButton from '@/components/PermissionButton.vue'
 
 /* ================= 状态 ================= */
+const auth = useAuthStore()
 const currentTime = ref('')
 const statusText = ref('连接中')
 const statusClass = ref('connecting')

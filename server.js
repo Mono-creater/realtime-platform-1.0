@@ -23,6 +23,7 @@ const { createStore } = require('./runtime-store');
 const { createSimSource } = require('./sim-source');
 const { createClockGuard, createSkewTracker } = require('./clock-guard');
 const { createAuth } = require('./auth');
+const { createUserStore } = require('./users');
 const { createV3Router } = require('./v3-routes');
 const pantographArchive = require('./pantograph-archive');
 
@@ -47,7 +48,9 @@ if (!authSecret) {
   authSecret = require('crypto').randomBytes(32).toString('hex');
   runtimeStore.set('authSecret', authSecret);
 }
-const auth = createAuth({ secret: authSecret, deviceToken: process.env.API_TOKEN });
+// 用户注册表（MySQL 可用时落库，否则内存；表为空时播种管理员账号）
+const userStore = createUserStore({ getPrisma: () => prisma, log: console.log });
+const auth = createAuth({ secret: authSecret, deviceToken: process.env.API_TOKEN, users: userStore });
 
 const app = express();
 app.use(cors(sec.corsOptions()));
@@ -2237,6 +2240,20 @@ app.use((req, res, next) => {
 // ============================================================
 const PORT = process.env.PORT || 3000;
 (async () => {
+    // 用户注册表：建表/补列 → 载入缓存 → 空表时播种管理员（失败退回内存模式，不影响启动）
+    try {
+        const uinfo = await userStore.init();
+        const seeded = await userStore.seedAdmin();
+        console.log(`👥 用户表就绪（${uinfo.mode}），共 ${userStore.count()} 个账号`);
+        if (seeded) {
+            console.log(seeded.plain
+                ? `👑 已创建管理员 ${seeded.username}，初始密码：${seeded.plain}（请登录后立即修改）`
+                : `👑 已创建管理员 ${seeded.username}（密码取自 AUTH_ADMIN_PASS）`);
+        }
+    } catch (err) {
+        console.warn('⚠️ 用户表初始化异常，认证将退回环境变量账号：', err.message);
+    }
+
     // 先补齐演示数据再读取历史：保证本次启动的内存列表与超限统计立即包含这 6 条。
     // 3.0：改为"清空重灌"，使演示告警时间始终相对当前时刻新鲜（否则旧记录会让
     // 总览页"今日告警/近7天趋势/30天健康度"恒为 0/100，页面看起来是空的）。

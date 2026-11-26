@@ -24,6 +24,24 @@ const crypto = require('crypto');
 
 const COOKIE_NAME = 'pf_session';
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const ROLE_RANK = { viewer: 1, operator: 2, admin: 3 };
+
+/** 仅管理员可执行的操作（路径前缀 + 方法，'*' 表示全部方法） */
+const ADMIN_ONLY = [
+    [/^\/api\/users(\/|$)/, '*'],
+    [/^\/api\/warning(\/|$)/, 'DELETE'],
+    [/^\/api\/warnings(\/|$)/, '*'],
+    [/^\/api\/alarm(\/|$)/, 'DELETE'],
+    [/^\/api\/alarms(\/|$)/, 'DELETE'],
+    [/^\/api\/v2\/ewma\/sigma(\/|$)/, '*'],
+    [/^\/api\/v2\/adaptive\/period(\/|$)/, '*'],
+    [/^\/api\/simulation\/clear(\/|$)/, '*'],
+];
+function isAdminOnly(req) {
+    const p = req.path || '';
+    return ADMIN_ONLY.some(([re, m]) => re.test(p) && (m === '*' || m === req.method));
+}
+function rank(role) { return ROLE_RANK[role] || 1; }
 
 function b64url(input) {
     return Buffer.from(input).toString('base64url');
@@ -67,10 +85,13 @@ function createAuth(opts = {}) {
         ? !!opts.enabled
         : String(process.env.AUTH_ENABLED || '').toLowerCase() === 'true';
     const publicRead = String(process.env.AUTH_PUBLIC_READ || 'true').toLowerCase() !== 'false';
+    const allowRegister = String(process.env.AUTH_ALLOW_REGISTER || 'true').toLowerCase() !== 'false';
     const sessionHours = Number(process.env.AUTH_SESSION_HOURS) || 8;
     const secret = opts.secret || process.env.AUTH_SECRET || crypto.randomBytes(32).toString('hex');
     /** 设备令牌（与 API_TOKEN 一致）：黑盒子等机器客户端用 X-API-Token 直接写入，无需登录 */
     const deviceToken = String(opts.deviceToken || process.env.API_TOKEN || '').trim();
+    /** 用户注册表（users.js 实例）；未提供时只保留环境变量账号 */
+    const userStore = opts.users || null;
 
     /** @type {Array<{u:string, role:string, pass?:object, generated?:boolean}>} */
     const accounts = [];
@@ -98,6 +119,7 @@ function createAuth(opts = {}) {
     }
 
     if (enabled) {
+        addAccount(process.env.AUTH_ADMIN_USER || 'admin', process.env.AUTH_ADMIN_PASS, 'admin');
         addAccount(process.env.AUTH_OPERATOR_USER || 'operator', process.env.AUTH_OPERATOR_PASS, 'operator');
         addAccount(process.env.AUTH_VIEWER_USER || 'viewer', process.env.AUTH_VIEWER_PASS, 'viewer');
     }
@@ -108,6 +130,7 @@ function createAuth(opts = {}) {
             r: user.role,
             exp: Date.now() + sessionHours * 3600 * 1000,
         };
+        if (user.id) payload.id = user.id;
         const body = b64url(JSON.stringify(payload));
         return `${body}.${hmac(secret, body)}`;
     }
@@ -140,9 +163,20 @@ function createAuth(opts = {}) {
     }
 
     function currentUser(req) {
-        if (!enabled) return { u: 'anonymous', role: 'operator', anonymous: true };
-        return verify(parseCookies(req)[COOKIE_NAME]);
+        if (!enabled) return { u: 'anonymous', role: 'admin', anonymous: true };
+        const payload = verify(parseCookies(req)[COOKIE_NAME]);
+        if (!payload) return null;
+        // 注册表中的用户被停用/改角色后，旧令牌即时失效（按用户名查内存镜像，O(1)）
+        if (userStore && !payload.a && payload.id) {
+            const rec = userStore.getById(payload.id);
+            if (!rec || !rec.enabled) return null;
+            payload.r = rec.role;
+            payload.name = rec.display_name || '';
+        }
+        return payload;
     }
+
+    const roleOf = (u) => (u && (u.r || u.role)) || 'viewer';
 
     /** Express 中间件：附加 req.user，并按角色拦截 */
     function middleware() {
@@ -151,7 +185,7 @@ function createAuth(opts = {}) {
             if (!enabled) return next();
 
             const p = req.path || '';
-            // 登录接口与健康检查放行（健康检查用于探针）
+            // 登录/注册接口与健康检查放行（健康检查用于探针）
             if (p.startsWith('/api/auth/') || p === '/api/health') return next();
             if (!p.startsWith('/api/')) return next();       // 静态资源与 SPA 放行
 
@@ -167,7 +201,12 @@ function createAuth(opts = {}) {
                 denied += 1;
                 return res.status(401).json({ error: '未登录', code: 'AUTH_REQUIRED' });
             }
-            if (MUTATING.has(req.method) && req.user.r !== 'operator') {
+            const role = roleOf(req.user);
+            if (isAdminOnly(req) && role !== 'admin') {
+                denied += 1;
+                return res.status(403).json({ error: '该操作仅管理员可执行', code: 'ADMIN_REQUIRED' });
+            }
+            if (MUTATING.has(req.method) && rank(role) < rank('operator')) {
                 denied += 1;
                 return res.status(403).json({ error: '只读账号无权执行写操作', code: 'AUTH_FORBIDDEN' });
             }
@@ -175,10 +214,10 @@ function createAuth(opts = {}) {
         };
     }
 
-    /** 挂载 /api/auth/* */
+    /** 挂载 /api/auth/* 与管理员用户管理接口 /api/users* */
     function routes(app) {
-        app.post('/api/auth/login', (req, res) => {
-            if (!enabled) return res.json({ ok: true, enabled: false, user: { u: 'anonymous', role: 'operator' } });
+        app.post('/api/auth/login', async (req, res) => {
+            if (!enabled) return res.json({ ok: true, enabled: false, user: { u: 'anonymous', role: 'admin' } });
             const ip = (req.ip || 'unknown').replace(/^::ffff:/, '');
             const now = Date.now();
             const rec = failures.get(ip);
@@ -187,8 +226,19 @@ function createAuth(opts = {}) {
             }
 
             const { username, password } = req.body || {};
+            let ok = false, who = null;
             const acc = accounts.find((a) => a.u === String(username || ''));
-            if (!acc || !verifyPassword(password, acc.pass)) {
+            if (acc && verifyPassword(password, acc.pass)) {
+                ok = true; who = { u: acc.u, role: acc.role, name: '' };
+            } else if (userStore) {
+                const u = userStore.findByUsername(username);
+                if (u && u.enabled && userStore.checkPassword(password, u.password)) {
+                    ok = true;
+                    who = { u: u.username, role: u.role, id: u.id, name: u.display_name || '' };
+                    userStore.touchLogin(u.id);
+                }
+            }
+            if (!ok) {
                 loginFail += 1;
                 const cur = failures.get(ip) || { count: 0, firstAt: now };
                 cur.count += 1;
@@ -197,9 +247,24 @@ function createAuth(opts = {}) {
             }
             loginOk += 1;
             failures.delete(ip);
-            const token = issue(acc);
+            const token = issue(who);
             res.setHeader('Set-Cookie', cookieHeader(token, sessionHours * 3600));
-            res.json({ ok: true, enabled: true, user: { u: acc.u, role: acc.role } });
+            res.json({ ok: true, enabled: true, user: who });
+        });
+
+        app.post('/api/auth/register', async (req, res) => {
+            if (!enabled) return res.status(400).json({ error: '认证未启用，无需注册' });
+            if (!allowRegister) return res.status(403).json({ error: '管理员已关闭自助注册' });
+            if (!userStore) return res.status(500).json({ error: '用户表未就绪' });
+            const { username, password, displayName } = req.body || {};
+            try {
+                const u = await userStore.create({ username, password, role: 'viewer', displayName });
+                const token = issue({ u: u.username, role: u.role, id: u.id, name: u.displayName });
+                res.setHeader('Set-Cookie', cookieHeader(token, sessionHours * 3600));
+                res.json({ ok: true, enabled: true, user: { u: u.username, role: u.role, id: u.id, name: u.displayName } });
+            } catch (err) {
+                return res.status(400).json({ error: err.message || '注册失败' });
+            }
         });
 
         app.post('/api/auth/logout', (req, res) => {
@@ -214,13 +279,87 @@ function createAuth(opts = {}) {
             res.json({ ok: true });
         });
 
+        app.post('/api/auth/password', async (req, res) => {
+            if (!enabled || !userStore) return res.status(400).json({ error: '认证未启用' });
+            const me = currentUser(req);
+            if (!me) return res.status(401).json({ error: '未登录' });
+            const { oldPassword, newPassword } = req.body || {};
+            const rec = me.id ? userStore.getById(me.id) : null;
+            if (!rec || !userStore.checkPassword(oldPassword, rec.password)) {
+                return res.status(400).json({ error: '原密码不正确' });
+            }
+            try {
+                await userStore.update(rec.id, { password: newPassword });
+                return res.json({ ok: true });
+            } catch (err) {
+                return res.status(400).json({ error: err.message });
+            }
+        });
+
+        // ---------- 管理员：用户管理 ----------
+        const requireAdmin = (req, res, next) => {
+            if (!enabled) return res.status(400).json({ error: '认证未启用' });
+            if (roleOf(req.user) !== 'admin') return res.status(403).json({ error: '仅管理员可操作' });
+            next();
+        };
+
+        app.get('/api/users', requireAdmin, (req, res) => {
+            res.json({ list: userStore ? userStore.list() : [], mode: userStore ? userStore.mode : 'none' });
+        });
+
+        app.post('/api/users', requireAdmin, async (req, res) => {
+            try {
+                const { username, password, role, displayName } = req.body || {};
+                const u = await userStore.create({ username, password, role: role || 'viewer', displayName });
+                res.json({ ok: true, user: u });
+            } catch (err) {
+                res.status(400).json({ error: err.message || '创建失败' });
+            }
+        });
+
+        app.patch('/api/users/:id', requireAdmin, async (req, res) => {
+            try {
+                const me = currentUser(req);
+                const id = Number(req.params.id);
+                if (me && me.id === id && req.body && req.body.role && req.body.role !== 'admin') {
+                    return res.status(400).json({ error: '不能取消自己的管理员角色' });
+                }
+                const u = await userStore.update(id, req.body || {});
+                res.json({ ok: true, user: u });
+            } catch (err) {
+                res.status(400).json({ error: err.message || '更新失败' });
+            }
+        });
+
+        app.delete('/api/users/:id', requireAdmin, async (req, res) => {
+            try {
+                const me = currentUser(req);
+                const id = Number(req.params.id);
+                if (me && me.id === id) return res.status(400).json({ error: '不能删除当前登录账号' });
+                const target = userStore.getById(id);
+                if (target && target.role === 'admin' && userStore.list().filter((x) => x.role === 'admin').length <= 1) {
+                    return res.status(400).json({ error: '至少保留一个管理员账号' });
+                }
+                await userStore.remove(id);
+                res.json({ ok: true });
+            } catch (err) {
+                res.status(400).json({ error: err.message || '删除失败' });
+            }
+        });
+
         app.get('/api/auth/me', (req, res) => {
             const user = currentUser(req);
+            const role = roleOf(user);
             res.json({
                 enabled,
                 publicRead,
+                allowRegister,
+                usersMode: userStore ? userStore.mode : 'none',
                 // 未启用认证时返回 null，前端据此不做任何拦截
-                user: enabled && user ? { u: user.u, role: user.r } : null,
+                user: enabled && user
+                    ? { u: user.u, role, name: user.name || '', id: user.id || null,
+                        canOperate: rank(role) >= rank('operator'), canManage: role === 'admin' }
+                    : null,
             });
         });
     }
@@ -229,8 +368,10 @@ function createAuth(opts = {}) {
         return {
             enabled,
             publicRead,
+            allowRegister,
             sessionHours,
             accounts: accounts.map((a) => ({ u: a.u, role: a.role, generated: !!a.generated })),
+            users: userStore ? { mode: userStore.mode, count: userStore.count() } : { mode: 'none', count: 0 },
             loginOk,
             loginFail,
             denied,
@@ -241,11 +382,12 @@ function createAuth(opts = {}) {
 
     /** 启动时打印账号信息（含自动生成的一次性密码） */
     function announce(log = console.log) {
-        if (!enabled) return log('🔓 认证未启用（设置 AUTH_ENABLED=true 开启）');
+        if (!enabled) return log('🔓 认证未启用（设置 AUTH_ENABLED=true 开启；注册表已就绪，开启后即可注册/登录）');
         for (const a of accounts) {
-            log(`🔐 账号 ${a.u}（${a.role}）${a.generated ? ` 初始密码：${a.plain}（请立即修改 AUTH_*_PASS）` : ''}`);
+            log(`🔐 环境账号 ${a.u}（${a.role}）${a.generated ? ` 初始密码：${a.plain}（请立即修改 AUTH_*_PASS）` : ''}`);
         }
-        log(`🔐 只读接口${publicRead ? '开放' : '需登录'}；写接口仅 operator 可调用`);
+        if (userStore) log(`👥 注册表账号 ${userStore.count()} 个（${userStore.mode}）`);
+        log(`🔐 只读接口${publicRead ? '开放' : '需登录'}；写接口需 operator，删除/标定/用户管理需 admin`);
     }
 
     return { enabled, middleware, routes, status, announce, verify, issue, accounts };

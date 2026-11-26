@@ -90,7 +90,7 @@
             <span>传感器噪声 σ</span>
             <el-input-number v-model="sigma" :min="0.01" :max="50" :step="0.1" :precision="2" size="small" @change="onSigmaInput" />
             <span class="unit">℃</span>
-            <el-button size="small" type="primary" :loading="sigmaSaving" @click="saveSigma">标定</el-button>
+            <PermissionButton level="admin" size="small" type="primary" :loading="sigmaSaving" @click="saveSigma">标定</PermissionButton>
           </div>
           <div class="kv"><span>EWMA 系数 λ / 窗口 W</span><b>{{ ewma.lambda }} / {{ ewma.windowMin }} min</b></div>
           <div class="kv"><span>σ_roc（式6）</span><b>{{ fixed(ewma.sigmaRoc, 4) }} ℃/min</b></div>
@@ -124,7 +124,7 @@
             <el-input-number v-model="pnSec" :min="1" :max="300" :step="1" size="small" />
             <span>Pa</span>
             <el-input-number v-model="paSec" :min="1" :max="60" :step="1" size="small" />
-            <el-button size="small" type="primary" :loading="periodSaving" @click="savePeriod">应用</el-button>
+            <PermissionButton level="admin" size="small" type="primary" :loading="periodSaving" @click="savePeriod">应用</PermissionButton>
           </div>
           <div class="kv"><span>当前上报周期</span><b>{{ adaptive.periodSec }} s</b></div>
           <div class="kv"><span>状态切换次数</span><b>{{ adaptive.switches ?? 0 }}</b></div>
@@ -170,14 +170,15 @@
             <el-table-column prop="assignee" label="处理人" width="84" />
             <el-table-column label="操作" width="150" fixed="right">
               <template #default="{ row }">
-                <el-button v-if="row.status === 'new'" size="small" link type="primary" @click="act(row, 'assign')">指派</el-button>
-                <el-button v-else-if="row.status === 'assigned'" size="small" link type="primary" @click="act(row, 'start')">开始</el-button>
-                <el-button v-else-if="row.status === 'in_progress'" size="small" link type="success" @click="act(row, 'complete')">完成</el-button>
-                <el-button v-else-if="row.status === 'completed'" size="small" link type="success" @click="act(row, 'verify')">复核</el-button>
-                <el-button
+                <PermissionButton v-if="row.status === 'new'" level="operator" size="small" link type="primary" @click="act(row, 'assign')">指派</PermissionButton>
+                <PermissionButton v-else-if="row.status === 'assigned'" level="operator" size="small" link type="primary" @click="act(row, 'start')">开始</PermissionButton>
+                <PermissionButton v-else-if="row.status === 'in_progress'" level="operator" size="small" link type="success" @click="act(row, 'complete')">完成</PermissionButton>
+                <PermissionButton v-else-if="row.status === 'completed'" level="operator" size="small" link type="success" @click="act(row, 'verify')">复核</PermissionButton>
+                <PermissionButton
                   v-if="['new', 'assigned', 'in_progress'].includes(row.status)"
+                  level="operator"
                   size="small" link type="danger" @click="act(row, 'cancel')"
-                >取消</el-button>
+                >取消</PermissionButton>
               </template>
             </el-table-column>
           </el-table>
@@ -211,8 +212,8 @@
             </el-table-column>
             <el-table-column label="操作" width="110" fixed="right">
               <template #default="{ row }">
-                <el-button v-if="row.status === 'active'" size="small" link type="primary" @click="ackAlarm(row)">确认</el-button>
-                <el-button v-else size="small" link type="success" @click="clearAlarm(row)">解除</el-button>
+                <PermissionButton v-if="row.status === 'active'" level="operator" size="small" link type="primary" @click="ackAlarm(row)">确认</PermissionButton>
+                <PermissionButton v-else level="operator" size="small" link type="success" @click="clearAlarm(row)">解除</PermissionButton>
               </template>
             </el-table-column>
           </el-table>
@@ -229,6 +230,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import socket from '@/socket'
+import PermissionButton from '@/components/PermissionButton.vue'
 
 const overview = ref({})
 const loading = ref(false)

@@ -12,7 +12,8 @@
           size="default"
           class="search-input"
         />
-        <el-button
+        <PermissionButton
+          level="admin"
           type="danger"
           plain
           size="default"
@@ -20,7 +21,7 @@
           @click="deleteSelected"
         >
           🗑️ 删除选中记录{{ selectedRows.length ? `（${selectedRows.length}）` : '' }}
-        </el-button>
+        </PermissionButton>
       </div>
     </div>
 
@@ -85,6 +86,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import api from '@/utils/api'
 import { useAlarmStore } from '@/stores/alarms'
+import PermissionButton from '@/components/PermissionButton.vue'
 
 // ---------- 数据 ----------
 // 列表来自全站共享 store（不再单独拉 /api/history）

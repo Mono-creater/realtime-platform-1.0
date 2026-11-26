@@ -19,8 +19,10 @@ import MaintenancePlan from '@/views/SmartDetection/MaintenancePlan.vue'
 import FaultAnalysis from '@/views/SmartDetection/FaultAnalysis.vue'
 import WearForecast from '@/views/SmartDetection/WearForecast.vue'
 import HealthAssessment from '@/views/SmartDetection/HealthAssessment.vue'
+import UserManagement from '@/views/SmartDetection/UserManagement.vue'
 import Login from '@/views/Login.vue'
 import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -137,6 +139,14 @@ const router = createRouter({
           name: 'HealthAssessment',
           component: HealthAssessment,
         },
+        // ---- 系统 ----
+        {
+          // 用户管理：注册表账号与角色（仅管理员可见，守卫二次拦截）
+          path: 'users',
+          name: 'UserManagement',
+          component: UserManagement,
+          meta: { adminOnly: true },
+        },
       ],
     },
     // 受电弓详情（旧入口，保留兼容）
@@ -166,6 +176,11 @@ router.beforeEach(async (to) => {
   if (!auth.checked) await auth.fetchMe()
   if (auth.enabled && !auth.user) {
     return { name: 'Login', query: { redirect: to.fullPath } }
+  }
+  // 管理员专属页面：非管理员直接回线路监控（菜单本身也不显示）
+  if (auth.enabled && to.meta && to.meta.adminOnly && !auth.canManage) {
+    ElMessage.warning('该页面仅管理员可访问')
+    return { name: 'MonitorLine' }
   }
   return true
 })

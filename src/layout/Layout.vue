@@ -14,9 +14,9 @@
 
     <!-- 当前登录用户（仅启用认证时显示） -->
     <div v-if="auth.enabled && auth.user" class="user-chip">
-      <span class="avatar">{{ (auth.user.u || '?').slice(0, 1).toUpperCase() }}</span>
-      <span class="name">{{ auth.user.u }}</span>
-      <span class="role">{{ auth.user.role === 'operator' ? '运维' : '只读' }}</span>
+      <span class="avatar">{{ (auth.user.name || auth.user.u || '?').slice(0, 1).toUpperCase() }}</span>
+      <span class="name">{{ auth.user.name || auth.user.u }}</span>
+      <span class="role">{{ auth.roleLabel }}</span>
       <el-button link size="small" class="logout" @click="onLogout">退出</el-button>
     </div>
   </div>
