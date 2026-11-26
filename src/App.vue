@@ -36,7 +36,9 @@ function apply() {
   // 若跟着 1440×1080 画布缩放，小窗口下卡片会被顶出可视区。
   if (route.name === 'Login') return
 
-  const vw = document.documentElement.clientWidth
+  // 用 innerWidth 而不是 clientWidth：滚动条接下来会被隐藏，按含滚动条的宽度铺满，
+  // 否则缩放后右侧会留下约 15px 的空白带
+  const vw = window.innerWidth || document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
   if (!vw || !vh) return
 
