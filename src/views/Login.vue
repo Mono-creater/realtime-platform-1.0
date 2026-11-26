@@ -130,15 +130,20 @@ onMounted(async () => {
 <style scoped>
 .login-page {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;   /* 按视口高度居中，小窗口下可滚动，不再被画布缩放顶出可视区 */
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
   background: radial-gradient(ellipse at 50% 0%, #123a63 0%, #0b182c 60%);
   color: #fff;
 }
 .login-card {
   width: 360px;
+  margin: auto;
+  flex-shrink: 0;
   padding: 32px 28px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);

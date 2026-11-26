@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { RouterView } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 
 // 移动端只做等比缩放，不改任何布局。
 //  · 横屏：按屏宽缩放，高度超出部分原生上下滚动
@@ -15,6 +15,7 @@ const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' 
 const stage = ref(null)
 const needRotateHint = ref(false)
 let appEl = null
+const route = useRoute()
 
 function reset() {
   if (!appEl) return
@@ -30,6 +31,10 @@ function apply() {
   if (!appEl || !stage.value) return
   needRotateHint.value = false
   reset()
+
+  // 登录/注册页不参与移动端等比缩放：它是普通表单页，按视口居中即可，
+  // 若跟着 1440×1080 画布缩放，小窗口下卡片会被顶出可视区。
+  if (route.name === 'Login') return
 
   const vw = document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
@@ -96,6 +101,10 @@ onMounted(() => {
   window.addEventListener('resize', apply)
   window.addEventListener('orientationchange', apply)
   if (window.visualViewport) window.visualViewport.addEventListener('resize', apply)
+})
+// 进出登录页时重新计算：登录页不缩放，其他页面恢复看板缩放
+watch(() => route.name, () => {
+  nextTick(() => { if (appEl) apply() })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('resize', apply)
