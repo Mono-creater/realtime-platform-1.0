@@ -39,6 +39,7 @@
         <!-- 顶部地铁展示 -->
         <div class="metro">
           <div class="metro_img" :class="{ 'in-station': inStation }">
+            <img class="metro-pic" :src="metroImg" alt="列车" fetchpriority="high" decoding="async" />
             <span class="pantograph-label label-1">1位</span>
             <span class="pantograph-label label-2">2位</span>
             <div class="train-light"></div>
@@ -60,6 +61,8 @@ import { useRouter } from 'vue-router'
 import carbon from '@/components/pantograph/carbon.vue'
 import TrainSelect from '@/components/pantograph/trainSelect.vue'
 import carbonInfo from '@/components/pantograph/carbonInfo.vue'
+// 地铁列车图：原 1.6 MB PNG 改为 52 KB WebP（2400px 宽），避免弱网首屏空白
+import metroImg from '@/assets/images/metroImg3.webp'
 
 const router = useRouter()
 const trainNumber = ref('0503')
@@ -164,22 +167,34 @@ onMounted(() => {
 
 .metro {
   width: 100%;
-  flex: 0 0 15%;
-  min-height: 72px;
+  /* 固定像素高度：不依赖父容器高度百分比，窗口再矮也不会被压成 0 */
+  flex: 0 0 auto;
+  height: 96px;
+  min-height: 96px;
   margin-bottom: 10px;
   padding: 0 5px;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .metro_img {
   width: 100%;
-  height: 100%;
-  background-image: url('@/assets/images/metroImg3.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
+  height: 96px;
   position: relative;
+  overflow: hidden;
   transition: transform 1.2s cubic-bezier(0.77, 0, 0.18, 1);
   transform: translateX(100%); /* 初始在右侧 */
+}
+
+/* 列车图改用 <img> 显式加载：52 KB WebP，弱网首屏不再空白 */
+.metro-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  user-select: none;
+  pointer-events: none;
 }
 
 .metro_img.in-station {
@@ -210,6 +225,8 @@ onMounted(() => {
   width: 100%;
   flex: 1;
   min-height: 0;
+  position: relative;
+  z-index: 0;
   display: flex;
   overflow: hidden;
 }
