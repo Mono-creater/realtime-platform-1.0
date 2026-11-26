@@ -13,7 +13,7 @@
         </div>
       </div>
       <template v-if="alarmConfig.data.length > 0">
-        <dv-scroll-board @click="handleAlarmRowClick" :config="alarmConfig" style="height: 220px" />
+        <dv-scroll-board @click="handleAlarmRowClick" :config="alarmConfig" class="board" />
       </template>
       <div v-else class="empty-tip">暂无部件告警，碳滑板状态正常</div>
     </div>
@@ -25,7 +25,7 @@
         <div class="state"></div>
       </div>
       <template v-if="warnConfig.data.length > 0">
-        <dv-scroll-board :config="warnConfig" style="height: 220px" />
+        <dv-scroll-board :config="warnConfig" class="board" />
       </template>
       <div v-else class="empty-tip">最近无环境/气路预警</div>
     </div>
@@ -45,7 +45,7 @@
           </div>
         </div>
       </div>
-      <dv-scroll-board :config="statusConfig" style="height: 220px" />
+      <dv-scroll-board :config="statusConfig" class="board" />
     </div>
   </div>
 </template>
@@ -174,9 +174,13 @@ onMounted(() => {
 .tabls {
   display: flex;
   justify-content: space-between;
+  align-items: stretch;
   margin-top: 10px;
+  height: 100%;
 }
 .table-section1 {
+  display: flex;
+  flex-direction: column;
   width: 30%;
   background: rgba(10, 46, 93, 0.5);
   border-radius: 5px;
@@ -185,6 +189,8 @@ onMounted(() => {
   min-width: 0;
 }
 .table-section2 {
+  display: flex;
+  flex-direction: column;
   width: 25%;
   background: rgba(10, 46, 93, 0.5);
   border-radius: 5px;
@@ -193,6 +199,8 @@ onMounted(() => {
   min-width: 0;
 }
 .table-section3 {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   background: rgba(10, 46, 93, 0.5);
   border-radius: 5px;
@@ -233,8 +241,14 @@ onMounted(() => {
   background: linear-gradient(90deg, #0a2e5d 0%, #3be6c1 100%);
   color: #3be6c1;
 }
+.board {
+  /* 表格随容器高度自适应，避免固定 220px 造成页面底部整片空白 */
+  flex: 1;
+  min-height: 120px;
+}
 .empty-tip {
-  /* 无数据时不再占满 220px，避免手机/横屏下出现大片空白 */
+  /* 无数据时也撑满剩余空间，与有数据时的高亮面板保持一致 */
+  flex: 1;
   height: auto;
   min-height: 60px;
   display: flex;

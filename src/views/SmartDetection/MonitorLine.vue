@@ -48,5 +48,6 @@ import DataTables from '@/components/DataTables.vue'
 .dataTables {
   width: 100%;
   flex: 1;
+  min-height: 0;   /* 让表格区拿到确定高度，内部 dv-scroll-board 才能按 100% 撑满 */
 }
 </style>
