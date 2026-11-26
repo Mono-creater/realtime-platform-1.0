@@ -151,14 +151,21 @@ onMounted(() => {
   display: flex;
 }
 
+/* 纵向分栏：地铁展示固定高度，受电弓信息取剩余空间。
+   原写法 metro 15% + info 100% 会溢出 15%，导致 info 面板覆盖上方地铁画面 */
 .trainDetail {
   flex: 1;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .metro {
   width: 100%;
-  height: 15%;
+  flex: 0 0 15%;
+  min-height: 72px;
   margin-bottom: 10px;
   padding: 0 5px;
   box-sizing: border-box;
@@ -201,7 +208,9 @@ onMounted(() => {
 
 .info {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
+  overflow: hidden;
 }
 </style>
