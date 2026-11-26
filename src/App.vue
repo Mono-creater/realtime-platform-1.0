@@ -41,7 +41,10 @@ function apply() {
   if (!vw || !vh) return
 
   const shortEdge = Math.min(window.screen.width || vw, window.screen.height || vh)
-  if (shortEdge >= 768) return // 非手机不做任何变换
+  const isMobile = shortEdge < 768
+  // 桌面窗口足够宽（≥ 设计宽度 1440）时不缩放；窗口被拖窄时与手机同样按宽度等比缩放，
+  // 否则这套 1440 宽的大屏在 1080 宽窗口下会横向溢出、右侧 KPI 被裁掉。
+  if (!isMobile && vw >= BASE_W) return
 
   const isPortrait = vh > vw
   document.documentElement.classList.toggle('is-ios', isIOS)
@@ -60,21 +63,21 @@ function apply() {
   let visualW
   let visualH
 
-  if (isPortrait && isIOS) {
+  if (isMobile && isPortrait && isIOS) {
     // iOS：系统旋转可靠，竖屏只提示、不旋转内容
     const k = vw / BASE_W
     visualW = vw
     visualH = Math.round(canvasH * k)
     el.style.transform = 'scale(' + k + ')'
     needRotateHint.value = true
-  } else if (isPortrait) {
+  } else if (isMobile && isPortrait) {
     // 安卓竖屏：内容旋转 90°，正好铺满竖屏
     const k = vh / BASE_W
     visualW = Math.round(canvasH * k)
     visualH = vh
     el.style.transform = 'translate(' + visualW + 'px, 0) rotate(90deg) scale(' + k + ')'
   } else {
-    // 横屏：按屏宽等比铺满；iOS 画布更高，可上下滑动查看
+    // 横屏（含桌面窄窗口）：按窗口宽度等比铺满
     const k = vw / BASE_W
     visualW = vw
     visualH = Math.round(canvasH * k)
@@ -138,7 +141,15 @@ body {
   height: 100%;
 }
 #app {
+  /* 必须是确定高度而不是 min-height：各页面用 height:100% + 百分比分栏，
+     父级为 auto 时百分比全部退化为内容高度，页面会超出视口并出现滚动/底部空白 */
+  height: 100%;
   min-height: 100%;
+}
+/* 画布容器同样撑满；移动端等比缩放时由行内 width/height 覆盖 */
+.stage {
+  width: 100%;
+  height: 100%;
 }
 
 /* 让列布局的高度能一路传递到页面根，否则 flex:1 的表格区拿不到高度 */
