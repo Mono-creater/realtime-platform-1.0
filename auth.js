@@ -187,6 +187,8 @@ function createAuth(opts = {}) {
             const p = req.path || '';
             // 登录/注册接口与健康检查放行（健康检查用于探针）
             if (p.startsWith('/api/auth/') || p === '/api/health') return next();
+            // 设备上行入口（黑盒子图传）：无登录态，靠 eventId 幂等与设备令牌保护，不参与人工权限体系
+            if (p === '/api/upload-alarm') return next();
             if (!p.startsWith('/api/')) return next();       // 静态资源与 SPA 放行
 
             // 设备令牌：黑盒子/边缘设备没有登录态，凭 X-API-Token 直接写
